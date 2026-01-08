@@ -1,4 +1,5 @@
 import { SolutionStep } from '../services/sessionApi'
+import { useTranslation } from '../i18n'
 
 interface SolutionViewerProps {
   steps: SolutionStep[]
@@ -13,6 +14,7 @@ export function SolutionViewer({
   explanation,
   onNewProblem,
 }: SolutionViewerProps) {
+  const { t } = useTranslation()
   return (
     <div
       style={{
@@ -34,7 +36,7 @@ export function SolutionViewer({
           alignItems: 'center',
         }}
       >
-        <span style={{ fontWeight: 600 }}>完整解答</span>
+        <span style={{ fontWeight: 600 }}>{t('solutionViewer.title')}</span>
         <span style={{ fontSize: '14px' }}>📖</span>
       </div>
 
@@ -49,7 +51,7 @@ export function SolutionViewer({
             color: '#92400e',
           }}
         >
-          💡 这是完整的解题步骤，希望对你有帮助！
+          💡 {t('solutionViewer.helpMessage')}
         </div>
 
         <div style={{ marginBottom: '20px' }}>
@@ -61,7 +63,7 @@ export function SolutionViewer({
               marginBottom: '12px',
             }}
           >
-            解题步骤
+            {t('solutionViewer.stepsTitle')}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {steps.map((step, index) => (
@@ -128,7 +130,7 @@ export function SolutionViewer({
               fontWeight: 500,
             }}
           >
-            最终答案
+            {t('solutionViewer.finalAnswer')}
           </p>
           <p
             style={{
@@ -170,7 +172,7 @@ export function SolutionViewer({
             cursor: 'pointer',
           }}
         >
-          练习下一道题
+          {t('solutionViewer.nextButton')}
         </button>
       </div>
     </div>

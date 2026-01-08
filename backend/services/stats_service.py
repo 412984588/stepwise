@@ -280,3 +280,86 @@ class StatsService:
             streak_message=streak_msg,
             performance_message=perf_msg,
         )
+
+    def get_trend_data(self, days: int = 7) -> TrendDataResponse:
+        end_date = datetime.now(timezone.utc).date()
+        start_date = end_date - timedelta(days=days - 1)
+
+        results = (
+            self._db.query(
+                func.date(HintSession.started_at).label("date"),
+                func.count(HintSession.id).label("total"),
+                func.sum(case((HintSession.status == SessionStatus.COMPLETED, 1), else_=0)).label(
+                    "completed"
+                ),
+                func.sum(case((HintSession.status == SessionStatus.REVEALED, 1), else_=0)).label(
+                    "revealed"
+                ),
+            )
+            .filter(func.date(HintSession.started_at) >= start_date)
+            .group_by(func.date(HintSession.started_at))
+            .order_by(func.date(HintSession.started_at))
+            .all()
+        )
+
+        stats_by_date = {str(row.date): row for row in results}
+
+        daily_stats = []
+        current = start_date
+        while current <= end_date:
+            date_str = str(current)
+            if date_str in stats_by_date:
+                row = stats_by_date[date_str]
+                daily_stats.append(
+                    DailyStats(
+                        date=date_str,
+                        total=row.total or 0,
+                        completed=row.completed or 0,
+                        revealed=row.revealed or 0,
+                    )
+                )
+            else:
+                daily_stats.append(DailyStats(date=date_str, total=0, completed=0, revealed=0))
+            current += timedelta(days=1)
+
+        return TrendDataResponse(daily_stats=daily_stats, period_days=days)
+
+    def get_goal_progress(
+        self, daily_target: int = 3, weekly_target: int = 15
+    ) -> LearningGoalProgress:
+        today = datetime.now(timezone.utc).date()
+        week_start = today - timedelta(days=today.weekday())
+
+        daily_completed = (
+            self._db.query(HintSession)
+            .filter(func.date(HintSession.started_at) == today)
+            .filter(HintSession.status.in_([SessionStatus.COMPLETED, SessionStatus.REVEALED]))
+            .count()
+        )
+
+        weekly_completed = (
+            self._db.query(HintSession)
+            .filter(func.date(HintSession.started_at) >= week_start)
+            .filter(HintSession.status.in_([SessionStatus.COMPLETED, SessionStatus.REVEALED]))
+            .count()
+        )
+
+        daily_progress = (
+            min(100.0, round((daily_completed / daily_target) * 100, 1))
+            if daily_target > 0
+            else 0.0
+        )
+        weekly_progress = (
+            min(100.0, round((weekly_completed / weekly_target) * 100, 1))
+            if weekly_target > 0
+            else 0.0
+        )
+
+        return LearningGoalProgress(
+            daily_target=daily_target,
+            daily_completed=daily_completed,
+            daily_progress=daily_progress,
+            weekly_target=weekly_target,
+            weekly_completed=weekly_completed,
+            weekly_progress=weekly_progress,
+        )

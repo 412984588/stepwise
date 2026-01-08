@@ -9,6 +9,7 @@ export function ErrorMessage({ message, onDismiss }: ErrorMessageProps) {
   return (
     <div
       role="alert"
+      data-test-id="error-message"
       style={{
         padding: '12px 16px',
         backgroundColor: '#fef2f2',

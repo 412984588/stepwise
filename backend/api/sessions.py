@@ -1,6 +1,6 @@
 import re
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
 
 from backend.database.engine import get_db
@@ -21,6 +21,8 @@ from backend.services.problem_classifier import ProblemClassifier
 from backend.services.hint_generator import HintGenerator
 from backend.services.understanding_evaluator import UnderstandingEvaluator
 from backend.services.session_manager import SessionManager
+from backend.services import entitlements
+from backend.i18n import get_message, Locale
 
 MIN_RESPONSE_LENGTH = 10
 
@@ -50,31 +52,48 @@ def is_math_problem(text: str) -> bool:
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ErrorResponse},
+        402: {"model": ErrorResponse},
         422: {"model": ErrorResponse},
     },
 )
 async def start_session(
     request: StartSessionRequest,
     db: Session = Depends(get_db),
+    x_user_id: str | None = Header(None, alias="X-User-ID"),
 ) -> StartSessionResponse:
+    user_id = x_user_id
+    if user_id:
+        usage_status = entitlements.check_can_start_session(db, user_id)
+        if not usage_status.can_start:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "LIMIT_REACHED",
+                    "message": get_message("LIMIT_REACHED", request.locale),
+                    "used": usage_status.used,
+                    "limit": usage_status.limit,
+                },
+            )
+
     problem_text = request.problem_text.strip()
+    locale = request.locale
 
     if not problem_text:
         raise HTTPException(
             status_code=400,
-            detail={"error": "EMPTY_INPUT", "message": "请输入一道数学题"},
+            detail={"error": "EMPTY_INPUT", "message": get_message("EMPTY_INPUT", locale)},
         )
 
     if len(problem_text) > 500:
         raise HTTPException(
             status_code=400,
-            detail={"error": "TOO_LONG", "message": "题目太长了，请精简后重试"},
+            detail={"error": "TOO_LONG", "message": get_message("TOO_LONG", locale)},
         )
 
     if not is_math_problem(problem_text):
         raise HTTPException(
             status_code=400,
-            detail={"error": "NOT_MATH", "message": "这看起来不是数学题，请输入一道数学题试试"},
+            detail={"error": "NOT_MATH", "message": get_message("NOT_MATH", locale)},
         )
 
     classifier = ProblemClassifier()
@@ -83,6 +102,7 @@ async def start_session(
     problem = Problem(
         raw_text=problem_text,
         problem_type=problem_type,
+        grade_level=request.grade_level,
     )
     db.add(problem)
     db.flush()
@@ -102,6 +122,8 @@ async def start_session(
         problem_text=problem_text,
         problem_type=problem_type,
         layer=HintLayer.CONCEPT,
+        locale=locale,
+        grade_level=request.grade_level,
     )
 
     hint_content = HintContent(
@@ -114,9 +136,13 @@ async def start_session(
     db.add(hint_content)
     db.commit()
 
+    if user_id:
+        entitlements.increment_usage(db, user_id)
+
     return StartSessionResponse(
         session_id=session_id,
         problem_type=problem_type.value.upper(),
+        topic=problem.topic.value if problem.topic else None,
         current_layer=HintLayer.CONCEPT.value.upper(),
         hint_content=hint.content,
         requires_response=True,
@@ -137,7 +163,7 @@ async def get_session(
     if not hint_session:
         raise HTTPException(
             status_code=404,
-            detail={"error": "SESSION_NOT_FOUND", "message": "会话不存在"},
+            detail={"error": "SESSION_NOT_FOUND", "message": get_message("SESSION_NOT_FOUND")},
         )
 
     problem = db.query(Problem).filter(Problem.id == hint_session.problem_id).first()
@@ -200,13 +226,13 @@ async def respond_to_hint(
     if not hint_session:
         raise HTTPException(
             status_code=404,
-            detail={"error": "SESSION_NOT_FOUND", "message": "会话不存在"},
+            detail={"error": "SESSION_NOT_FOUND", "message": get_message("SESSION_NOT_FOUND")},
         )
 
     if hint_session.status != SessionStatus.ACTIVE:
         raise HTTPException(
             status_code=400,
-            detail={"error": "SESSION_COMPLETED", "message": "会话已结束"},
+            detail={"error": "SESSION_COMPLETED", "message": get_message("SESSION_COMPLETED")},
         )
 
     response_text = request.response_text.strip()
@@ -214,14 +240,14 @@ async def respond_to_hint(
     if len(response_text) < MIN_RESPONSE_LENGTH:
         raise HTTPException(
             status_code=400,
-            detail={"error": "RESPONSE_TOO_SHORT", "message": "能再多写一点你的想法吗？"},
+            detail={"error": "RESPONSE_TOO_SHORT", "message": get_message("RESPONSE_TOO_SHORT")},
         )
 
     problem = db.query(Problem).filter(Problem.id == hint_session.problem_id).first()
     if not problem:
         raise HTTPException(
             status_code=404,
-            detail={"error": "PROBLEM_NOT_FOUND", "message": "题目不存在"},
+            detail={"error": "PROBLEM_NOT_FOUND", "message": get_message("PROBLEM_NOT_FOUND")},
         )
 
     evaluator = UnderstandingEvaluator()
@@ -330,21 +356,21 @@ async def reveal_solution(
     if not hint_session:
         raise HTTPException(
             status_code=404,
-            detail={"error": "SESSION_NOT_FOUND", "message": "会话不存在"},
+            detail={"error": "SESSION_NOT_FOUND", "message": get_message("SESSION_NOT_FOUND")},
         )
 
     session_manager = SessionManager()
     if not session_manager.can_reveal_solution(hint_session.current_layer, hint_session.status):
         raise HTTPException(
             status_code=400,
-            detail={"error": "REVEAL_NOT_ALLOWED", "message": "请先完成所有提示层级"},
+            detail={"error": "REVEAL_NOT_ALLOWED", "message": get_message("REVEAL_NOT_ALLOWED")},
         )
 
     problem = db.query(Problem).filter(Problem.id == hint_session.problem_id).first()
     if not problem:
         raise HTTPException(
             status_code=404,
-            detail={"error": "PROBLEM_NOT_FOUND", "message": "题目不存在"},
+            detail={"error": "PROBLEM_NOT_FOUND", "message": get_message("PROBLEM_NOT_FOUND")},
         )
 
     generator = SolutionGenerator()
@@ -395,14 +421,17 @@ async def complete_session(
     if not hint_session:
         raise HTTPException(
             status_code=404,
-            detail={"error": "SESSION_NOT_FOUND", "message": "会话不存在"},
+            detail={"error": "SESSION_NOT_FOUND", "message": get_message("SESSION_NOT_FOUND")},
         )
 
     allowed_layers = [HintLayer.STEP, HintLayer.COMPLETED]
     if hint_session.current_layer not in allowed_layers:
         raise HTTPException(
             status_code=400,
-            detail={"error": "COMPLETE_NOT_ALLOWED", "message": "请先完成更多提示"},
+            detail={
+                "error": "COMPLETE_NOT_ALLOWED",
+                "message": get_message("COMPLETE_NOT_ALLOWED"),
+            },
         )
 
     hint_session.status = SessionStatus.COMPLETED
@@ -413,5 +442,5 @@ async def complete_session(
     return CompleteResponse(
         session_id=session_id,
         status="COMPLETED",
-        message="恭喜你独立完成了这道题！",
+        message=get_message("COMPLETE_SUCCESS"),
     ).model_dump()

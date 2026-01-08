@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ProblemInput } from './components/ProblemInput'
 import { HintDialog } from './components/HintDialog'
 import { ErrorMessage } from './components/ErrorMessage'
 import { SolutionViewer } from './components/SolutionViewer'
 import { Dashboard } from './components/Dashboard'
+import { GradeSelector, GradeLevel } from './components/GradeSelector'
+import { SubscriptionBanner } from './components/SubscriptionBanner'
+import { UpgradeModal } from './components/UpgradeModal'
 import {
   startSession,
   submitResponse,
@@ -12,7 +15,10 @@ import {
   getErrorMessage,
   SolutionStep,
 } from './services/sessionApi'
+import { getSubscription, createCheckout, SubscriptionInfo } from './services/billingApi'
 import { HintLayer } from './types/enums'
+import { useTranslation } from './i18n'
+import { useUserId } from './hooks/useUserId'
 
 type AppView = 'main' | 'dashboard'
 
@@ -33,11 +39,33 @@ interface SolutionState {
 }
 
 function App() {
+  const { t, locale } = useTranslation()
+  const userId = useUserId()
   const [view, setView] = useState<AppView>('main')
   const [session, setSession] = useState<SessionState | null>(null)
   const [solution, setSolution] = useState<SolutionState | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [gradeLevel, setGradeLevel] = useState<GradeLevel | null>(null)
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      try {
+        const sub = await getSubscription(userId)
+        setSubscription(sub)
+      } catch {
+        setSubscription({
+          tier: 'free',
+          status: 'active',
+          current_period_end: null,
+          usage: { used: 0, limit: 3, can_start: true },
+        })
+      }
+    }
+    loadSubscription()
+  }, [userId])
 
   const handleStartSession = async (problemText: string) => {
     setIsLoading(true)
@@ -45,7 +73,11 @@ function App() {
     setSolution(null)
 
     try {
-      const response = await startSession(problemText)
+      const response = await startSession(problemText, {
+        locale,
+        gradeLevel: gradeLevel ?? undefined,
+        userId,
+      })
       setSession({
         sessionId: response.session_id,
         problemText,
@@ -128,6 +160,37 @@ function App() {
     setError(null)
   }
 
+  const handleUpgrade = async (tier: 'pro' | 'family') => {
+    try {
+      const checkoutUrl = await createCheckout(
+        userId,
+        tier,
+        `${window.location.origin}?upgraded=true`,
+        window.location.href
+      )
+      window.location.href = checkoutUrl
+    } catch (err) {
+      setError(getErrorMessage(err))
+    }
+  }
+
+  const refreshSubscription = useCallback(async () => {
+    try {
+      const sub = await getSubscription(userId)
+      setSubscription(sub)
+    } catch (_) {
+      void 0
+    }
+  }, [userId])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('upgraded') === 'true') {
+      refreshSubscription()
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [refreshSubscription])
+
   return (
     <div
       style={{
@@ -156,11 +219,20 @@ function App() {
             StepWise
           </h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>
-            苏格拉底式数学教练 - 引导你一步步思考
+            {t('app.subtitle')}
           </p>
         </header>
 
         {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
+
+        {subscription && view === 'main' && !session && !solution && (
+          <SubscriptionBanner
+            tier={subscription.tier}
+            used={subscription.usage?.used ?? 0}
+            limit={subscription.usage?.limit ?? null}
+            onUpgradeClick={() => setShowUpgradeModal(true)}
+          />
+        )}
 
         {view === 'dashboard' ? (
           <Dashboard onBack={() => setView('main')} />
@@ -180,6 +252,11 @@ function App() {
               boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
             }}
           >
+            <GradeSelector
+              value={gradeLevel}
+              onChange={setGradeLevel}
+              disabled={isLoading}
+            />
             <ProblemInput onSubmit={handleStartSession} isLoading={isLoading} />
             <button
               onClick={() => setView('dashboard')}
@@ -195,7 +272,7 @@ function App() {
                 cursor: 'pointer',
               }}
             >
-              📊 查看学习统计
+              📊 {t('dashboard.viewStats')}
             </button>
           </div>
         ) : (
@@ -222,9 +299,16 @@ function App() {
             color: '#9ca3af',
           }}
         >
-          <p>不直接给答案，引导你独立思考 💡</p>
+          <p>{t('app.footer')}</p>
         </footer>
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onSelectTier={handleUpgrade}
+        currentTier={subscription?.tier ?? 'free'}
+      />
     </div>
   )
 }

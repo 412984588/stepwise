@@ -1,13 +1,26 @@
-import { useState, useEffect } from 'react'
-import { getDashboard, DashboardData } from '../services/sessionApi'
-import { SessionHistoryList } from './SessionHistoryList'
+import { useState, useEffect } from 'react';
+import {
+  getDashboard,
+  getTrendData,
+  getGoalProgress,
+  DashboardData,
+  TrendData,
+  GoalProgress as GoalProgressData,
+} from '../services/sessionApi';
+import { SessionHistoryList } from './SessionHistoryList';
+import { TrendChart } from './TrendChart';
+import { GoalProgress } from './GoalProgress';
+import { useTranslation } from '../i18n';
 
 interface DashboardProps {
   onBack: () => void
 }
 
 export function Dashboard({ onBack }: DashboardProps) {
+  const { t } = useTranslation()
   const [data, setData] = useState<DashboardData | null>(null)
+  const [trendData, setTrendData] = useState<TrendData | null>(null)
+  const [goalData, setGoalData] = useState<GoalProgressData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -15,19 +28,25 @@ export function Dashboard({ onBack }: DashboardProps) {
     async function loadData() {
       try {
         setIsLoading(true)
-        const dashboardData = await getDashboard()
+        const [dashboardData, trend, goals] = await Promise.all([
+          getDashboard(),
+          getTrendData(7),
+          getGoalProgress(3, 15),
+        ])
         setData(dashboardData)
+        setTrendData(trend)
+        setGoalData(goals)
       } catch (err) {
-        setError('加载数据失败，请稍后重试')
+        setError(t('errors.loadingFailed'))
       } finally {
         setIsLoading(false)
       }
     }
     loadData()
-  }, [])
+  }, [t])
 
   if (isLoading) {
-    return <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>加载中...</div>
+    return <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>{t('dashboard.encouragement.loading')}</div>
   }
 
   if (error) {
@@ -46,7 +65,7 @@ export function Dashboard({ onBack }: DashboardProps) {
           alignItems: 'center',
         }}
       >
-        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 600, color: '#1f2937' }}>学习统计</h2>
+        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 600, color: '#1f2937' }}>{t('dashboard.title')}</h2>
         <button
           onClick={onBack}
           style={{
@@ -59,7 +78,7 @@ export function Dashboard({ onBack }: DashboardProps) {
             cursor: 'pointer',
           }}
         >
-          返回做题
+          {t('dashboard.backButton')}
         </button>
       </div>
 
@@ -90,24 +109,30 @@ export function Dashboard({ onBack }: DashboardProps) {
       >
         <StatCard
           icon="📅"
-          label="学习天数"
-          value={`${data.total_learning_days}天`}
+          label={t('dashboard.stats.learningDays')}
+          value={`${data.total_learning_days} ${t('dashboard.stats.days')}`}
           color="#3b82f6"
         />
         <StatCard
           icon="✅"
-          label="独立完成率"
+          label={t('dashboard.stats.completionRate')}
           value={`${data.independent_completion_rate}%`}
           color="#22c55e"
         />
         <StatCard
           icon="📊"
-          label="本周练习"
-          value={`${data.sessions_this_week}题`}
+          label={t('dashboard.stats.weeklyPractice')}
+          value={`${data.sessions_this_week} ${t('dashboard.stats.problems')}`}
           color="#8b5cf6"
         />
-        <StatCard icon="🔥" label="连续学习" value={`${data.learning_streak}天`} color="#f59e0b" />
+        <StatCard icon="🔥" label={t('dashboard.stats.streak')} value={`${data.learning_streak} ${t('dashboard.stats.days')}`} color="#f59e0b" />
       </div>
+
+      {goalData && <GoalProgress data={goalData} />}
+
+      {trendData && trendData.daily_stats.length > 0 && (
+        <TrendChart data={trendData.daily_stats} />
+      )}
 
       {data.problem_type_stats.length > 0 && (
         <div
@@ -127,7 +152,7 @@ export function Dashboard({ onBack }: DashboardProps) {
               color: '#374151',
             }}
           >
-            📈 题型掌握情况
+            📈 {t('dashboard.problemTypes')}
           </div>
           <div style={{ padding: '16px 20px' }}>
             {data.problem_type_stats.map((stat) => (
@@ -153,8 +178,8 @@ export function Dashboard({ onBack }: DashboardProps) {
             color: '#374151',
           }}
         >
-          📜 最近练习
-        </div>
+            📜 {t('dashboard.recentSessions')}
+          </div>
         <SessionHistoryList sessions={data.recent_sessions} />
       </div>
     </div>

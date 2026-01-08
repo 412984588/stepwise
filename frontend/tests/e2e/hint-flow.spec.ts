@@ -6,90 +6,94 @@ test.describe('Hint Flow - User Story 1', () => {
   })
 
   test('displays problem input form on initial load', async ({ page }) => {
-    await expect(page.getByLabel('输入你的数学题')).toBeVisible()
-    await expect(page.getByRole('button', { name: '开始解题' })).toBeVisible()
+    await expect(page.getByLabel('Enter your math problem')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Start Solving' })).toBeVisible()
   })
 
   test('submit button is disabled when input is empty', async ({ page }) => {
-    const submitButton = page.getByRole('button', { name: '开始解题' })
+    const submitButton = page.getByRole('button', { name: 'Start Solving' })
     await expect(submitButton).toBeDisabled()
   })
 
   test('submit button is enabled when input has content', async ({ page }) => {
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    const submitButton = page.getByRole('button', { name: '开始解题' })
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    const submitButton = page.getByRole('button', { name: 'Start Solving' })
     await expect(submitButton).toBeEnabled()
   })
 
   test('cannot skip response - submit disabled with less than 10 chars', async ({ page }) => {
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
 
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
 
-    const responseInput = page.getByLabel('写下你的想法')
-    await responseInput.fill('短回复')
+    const responseInput = page.getByLabel('Write your thoughts')
+    await responseInput.fill('short')
 
-    const submitButton = page.getByRole('button', { name: '提交回答' })
+    const submitButton = page.getByRole('button', { name: 'Submit Answer' })
     await expect(submitButton).toBeDisabled()
 
-    await expect(page.getByText(/还需要输入.*个字符/)).toBeVisible()
+    await expect(page.getByText(/Need.*more characters/)).toBeVisible()
   })
 
   test('can submit response with 10+ characters', async ({ page }) => {
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
 
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
 
-    const responseInput = page.getByLabel('写下你的想法')
-    await responseInput.fill('我认为这是一道一元一次方程')
+    const responseInput = page.getByLabel('Write your thoughts')
+    await responseInput.fill('I think this is a linear equation')
 
-    const submitButton = page.getByRole('button', { name: '提交回答' })
+    const submitButton = page.getByRole('button', { name: 'Submit Answer' })
     await expect(submitButton).toBeEnabled()
 
-    await expect(page.getByText('✓ 可以提交了')).toBeVisible()
+    await expect(page.getByText(/Ready to submit/)).toBeVisible()
   })
 
   test('response character counter updates in real-time', async ({ page }) => {
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
 
-    const responseInput = page.getByLabel('写下你的想法')
+    const responseInput = page.getByLabel('Write your thoughts')
 
     await responseInput.fill('12345')
-    await expect(page.getByText('5 字符')).toBeVisible()
-    await expect(page.getByText('还需要输入 5 个字符')).toBeVisible()
+    await expect(page.getByText('5 characters')).toBeVisible()
+    await expect(page.getByText('Need 5 more characters')).toBeVisible()
 
     await responseInput.fill('1234567890')
-    await expect(page.getByText('10 字符')).toBeVisible()
-    await expect(page.getByText('✓ 可以提交了')).toBeVisible()
+    await expect(page.getByText('10 characters')).toBeVisible()
+    await expect(page.getByText(/Ready to submit/)).toBeVisible()
   })
 
   test('can cancel and return to input form', async ({ page }) => {
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
 
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
 
-    await page.getByRole('button', { name: '重新开始' }).click()
+    await page.getByRole('button', { name: 'Start Over' }).click()
 
-    await expect(page.getByLabel('输入你的数学题')).toBeVisible()
+    await expect(page.getByLabel('Enter your math problem')).toBeVisible()
   })
 
   test('shows error message for empty input', async ({ page }) => {
-    const textarea = page.getByLabel('输入你的数学题')
+    const textarea = page.getByLabel('Enter your math problem')
     await textarea.fill('   ')
 
-    const submitButton = page.getByRole('button', { name: '开始解题' })
+    const submitButton = page.getByRole('button', { name: 'Start Solving' })
     await expect(submitButton).toBeDisabled()
   })
 
   test('layer progress indicator shows current layer', async ({ page }) => {
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
 
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
 
     const progressIndicators = page.locator('[style*="border-radius: 50%"]')
     await expect(progressIndicators).toHaveCount(3)
@@ -99,90 +103,112 @@ test.describe('Hint Flow - User Story 1', () => {
 test.describe('Layer Progression - User Story 2', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
   })
 
   test('understood response with keyword advances to STRATEGY layer', async ({ page }) => {
-    const responseInput = page.getByLabel('写下你的想法')
-    await responseInput.fill('我觉得需要使用移项来把常数移到等式右边')
+    const responseInput = page.getByLabel('Write your thoughts')
+    await responseInput.fill('I need to use transposition to move the constant to the right side')
 
-    await page.getByRole('button', { name: '提交回答' }).click()
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
 
-    await expect(page.getByText('策略提示')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
   })
 
   test('confused response without keyword stays on same layer', async ({ page }) => {
-    const responseInput = page.getByLabel('写下你的想法')
-    await responseInput.fill('我觉得这道题目看起来挺有意思的')
+    const responseInput = page.getByLabel('Write your thoughts')
+    await responseInput.fill('I think this problem looks interesting')
 
-    await page.getByRole('button', { name: '提交回答' }).click()
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
 
-    await expect(page.getByText('概念提示')).toBeVisible()
-    await expect(page.getByText(/没关系.*再想想看/)).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
+    await expect(page.getByText(/okay.*think about it/i)).toBeVisible()
   })
 
   test('confusion counter increments on confused response', async ({ page }) => {
-    const responseInput = page.getByLabel('写下你的想法')
-    await responseInput.fill('我觉得这道题目看起来挺有意思的')
+    const responseInput = page.getByLabel('Write your thoughts')
+    await responseInput.fill('I think this problem looks interesting')
 
-    await page.getByRole('button', { name: '提交回答' }).click()
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
 
     await expect(page.getByText('(1/3)')).toBeVisible()
   })
 
   test('full layer progression from CONCEPT to COMPLETED', async ({ page }) => {
-    await page.getByLabel('写下你的想法').fill('我觉得需要使用移项来把常数移到等式右边')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('策略提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
 
-    await page.getByLabel('写下你的想法').fill('我理解了，需要先移项再合并同类项')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('步骤提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
-    await page.getByLabel('写下你的想法').fill('按照步骤来，先把5移到右边变成负数')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('已完成')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('Following the steps, move 5 to the right side')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Completed')
   })
 })
 
 test.describe('Dashboard Flow - User Story 4', () => {
   test('can navigate to dashboard from main page', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: '查看学习统计' }).click()
-    await expect(page.getByText('学习统计')).toBeVisible()
+    await page.getByRole('button', { name: 'View Learning Stats' }).click()
+    await expect(page.getByText('Learning Statistics')).toBeVisible()
   })
 
   test('dashboard shows stats cards', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: '查看学习统计' }).click()
+    await page.getByRole('button', { name: 'View Learning Stats' }).click()
 
-    await expect(page.getByText('学习天数')).toBeVisible()
-    await expect(page.getByText('独立完成率')).toBeVisible()
-    await expect(page.getByText('本周练习')).toBeVisible()
-    await expect(page.getByText('连续学习')).toBeVisible()
+    await expect(page.getByText('Learning Days')).toBeVisible()
+    await expect(page.getByText('Independent Completion Rate')).toBeVisible()
+    await expect(page.getByText('Weekly Practice')).toBeVisible()
+    await expect(page.getByText('Learning Streak')).toBeVisible()
+  })
+
+  test('dashboard shows learning goal progress', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'View Learning Stats' }).click()
+
+    await expect(page.getByText('Learning Goals')).toBeVisible()
+    await expect(page.getByText('Daily Goal')).toBeVisible()
+    await expect(page.getByText('Weekly Goal')).toBeVisible()
+  })
+
+  test('dashboard shows trend chart', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'View Learning Stats' }).click()
+
+    await expect(page.getByText('Practice Trend')).toBeVisible()
+    await expect(page.getByText('Last 7 days')).toBeVisible()
+    await expect(page.getByText('Independent', { exact: true })).toBeVisible()
+    await expect(page.getByText('Total Practice')).toBeVisible()
   })
 
   test('can return to main from dashboard', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: '查看学习统计' }).click()
-    await expect(page.getByText('学习统计')).toBeVisible()
+    await page.getByRole('button', { name: 'View Learning Stats' }).click()
+    await expect(page.getByText('Learning Statistics')).toBeVisible()
 
-    await page.getByRole('button', { name: '返回做题' }).click()
-    await expect(page.getByLabel('输入你的数学题')).toBeVisible()
+    await page.getByRole('button', { name: 'Back to Practice' }).click()
+    await expect(page.getByLabel('Enter your math problem')).toBeVisible()
   })
 
   test('dashboard shows session history after completing a session', async ({ page }) => {
     await page.goto('/')
-    await page.getByLabel('输入你的数学题').fill('5x = 25')
-    await page.getByRole('button', { name: '开始解题' }).click()
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await page.getByLabel('Enter your math problem').fill('5x = 25')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
 
-    await page.getByRole('button', { name: '重新开始' }).click()
-    await page.getByRole('button', { name: '查看学习统计' }).click()
+    await page.getByRole('button', { name: 'Start Over' }).click()
+    await page.getByRole('button', { name: 'View Learning Stats' }).click()
 
-    await expect(page.getByText('最近练习')).toBeVisible()
+    await expect(page.getByText('Recent Practice')).toBeVisible()
     await expect(page.getByText('5x = 25')).toBeVisible()
   })
 })
@@ -190,81 +216,71 @@ test.describe('Dashboard Flow - User Story 4', () => {
 test.describe('Reveal Solution Flow - User Story 3', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.getByLabel('输入你的数学题').fill('3x + 5 = 14')
-    await page.getByRole('button', { name: '开始解题' }).click()
-    await expect(page.getByText('概念提示')).toBeVisible()
+    await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
+    await page.getByRole('button', { name: 'Start Solving' }).click()
+    await expect(page.locator('#hint-layer-label')).toBeVisible()
+    await expect(page.locator('#hint-layer-label')).toContainText('Concept Hint')
   })
 
   test('reveal button is disabled at CONCEPT layer', async ({ page }) => {
-    const revealButton = page.getByRole('button', { name: '显示解答' })
+    const revealButton = page.getByRole('button', { name: 'Show Solution' })
     await expect(revealButton).toBeDisabled()
   })
 
   test('I solved it button is disabled at CONCEPT layer', async ({ page }) => {
-    const completeButton = page.getByRole('button', { name: '我做出来了！' })
+    const completeButton = page.getByRole('button', { name: 'I solved it!' })
     await expect(completeButton).toBeDisabled()
   })
 
   test('reveal button becomes enabled after reaching STEP layer', async ({ page }) => {
-    // Progress to STRATEGY
-    await page.getByLabel('写下你的想法').fill('我觉得需要使用移项来把常数移到等式右边')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('策略提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
 
-    // Progress to STEP
-    await page.getByLabel('写下你的想法').fill('我理解了，需要先移项再合并同类项')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('步骤提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
-    // Reveal button should now be enabled
-    const revealButton = page.getByRole('button', { name: '显示解答' })
+    const revealButton = page.getByRole('button', { name: 'Show Solution' })
     await expect(revealButton).toBeEnabled()
   })
 
   test('I solved it button becomes enabled at STEP layer', async ({ page }) => {
-    // Progress to STRATEGY
-    await page.getByLabel('写下你的想法').fill('我觉得需要使用移项来把常数移到等式右边')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('策略提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
 
-    // Progress to STEP
-    await page.getByLabel('写下你的想法').fill('我理解了，需要先移项再合并同类项')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('步骤提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
-    // Complete button should now be enabled
-    const completeButton = page.getByRole('button', { name: '我做出来了！' })
+    const completeButton = page.getByRole('button', { name: 'I solved it!' })
     await expect(completeButton).toBeEnabled()
   })
 
   test('clicking reveal shows solution viewer', async ({ page }) => {
-    // Progress to STEP layer
-    await page.getByLabel('写下你的想法').fill('我觉得需要使用移项来把常数移到等式右边')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await page.getByLabel('写下你的想法').fill('我理解了，需要先移项再合并同类项')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('步骤提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
-    // Click reveal
-    await page.getByRole('button', { name: '显示解答' }).click()
+    await page.getByRole('button', { name: 'Show Solution' }).click()
 
-    await expect(page.getByText('完整解答')).toBeVisible()
-    await expect(page.getByText('最终答案')).toBeVisible()
-    await expect(page.getByRole('button', { name: '练习下一道题' })).toBeVisible()
+    await expect(page.getByText('Complete Solution', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Final Answer')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Practice Next Problem' })).toBeVisible()
   })
 
   test('clicking I solved it returns to problem input', async ({ page }) => {
-    // Progress to STEP layer
-    await page.getByLabel('写下你的想法').fill('我觉得需要使用移项来把常数移到等式右边')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await page.getByLabel('写下你的想法').fill('我理解了，需要先移项再合并同类项')
-    await page.getByRole('button', { name: '提交回答' }).click()
-    await expect(page.getByText('步骤提示')).toBeVisible()
+    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page.getByRole('button', { name: 'Submit Answer' }).click()
+    await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
-    // Click complete
-    await page.getByRole('button', { name: '我做出来了！' }).click()
+    await page.getByRole('button', { name: 'I solved it!' }).click()
 
-    // Should return to problem input
-    await expect(page.getByLabel('输入你的数学题')).toBeVisible()
+    await expect(page.getByLabel('Enter your math problem')).toBeVisible()
   })
 })

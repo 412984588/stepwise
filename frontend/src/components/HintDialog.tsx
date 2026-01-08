@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { HintLayer } from '../types/enums'
+import { useTranslation } from '../i18n'
 
 interface HintDialogProps {
   problemText: string
@@ -17,12 +18,12 @@ interface HintDialogProps {
 
 const MIN_RESPONSE_LENGTH = 10
 
-const LAYER_LABELS: Record<HintLayer, string> = {
-  [HintLayer.CONCEPT]: '概念提示',
-  [HintLayer.STRATEGY]: '策略提示',
-  [HintLayer.STEP]: '步骤提示',
-  [HintLayer.COMPLETED]: '已完成',
-  [HintLayer.REVEALED]: '完整解答',
+const LAYER_KEYS: Record<HintLayer, string> = {
+  [HintLayer.CONCEPT]: 'hintDialog.layers.concept',
+  [HintLayer.STRATEGY]: 'hintDialog.layers.strategy',
+  [HintLayer.STEP]: 'hintDialog.layers.step',
+  [HintLayer.COMPLETED]: 'hintDialog.layers.completed',
+  [HintLayer.REVEALED]: 'hintDialog.layers.revealed',
 }
 
 const LAYER_COLORS: Record<HintLayer, string> = {
@@ -46,6 +47,7 @@ export function HintDialog({
   isDowngrade = false,
   canReveal = false,
 }: HintDialogProps) {
+  const { t } = useTranslation()
   const [responseText, setResponseText] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -81,7 +83,7 @@ export function HintDialog({
           alignItems: 'center',
         }}
       >
-        <span style={{ fontWeight: 600 }}>{LAYER_LABELS[currentLayer]}</span>
+        <span id="hint-layer-label" style={{ fontWeight: 600 }} data-test-id="hint-layer-label">{t(LAYER_KEYS[currentLayer])}</span>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[HintLayer.CONCEPT, HintLayer.STRATEGY, HintLayer.STEP].map((layer, idx) => (
             <div
@@ -124,7 +126,7 @@ export function HintDialog({
             color: '#4b5563',
           }}
         >
-          <strong>题目：</strong>
+          <strong>{t('hintDialog.problem')}</strong>
           {problemText}
         </div>
 
@@ -137,7 +139,7 @@ export function HintDialog({
             borderLeft: `4px solid ${LAYER_COLORS[currentLayer]}`,
           }}
         >
-          <p style={{ margin: 0, lineHeight: 1.6, color: '#1e40af' }}>{hintContent}</p>
+          <p style={{ margin: 0, lineHeight: 1.6, color: '#1e40af' }} data-test-id="hint-content">{hintContent}</p>
         </div>
 
         {isDowngrade && (
@@ -152,7 +154,7 @@ export function HintDialog({
               borderLeft: '4px solid #3b82f6',
             }}
           >
-            🌟 让我换个角度来帮你理解这个概念！
+            🌟 {t('hintDialog.downgradeMessage')}
           </div>
         )}
 
@@ -167,7 +169,7 @@ export function HintDialog({
               color: '#92400e',
             }}
           >
-            💡 没关系，再想想看！({confusionCount}/3)
+            💡 {t('hintDialog.confusionMessage')} ({confusionCount}/3)
           </div>
         )}
 
@@ -182,13 +184,14 @@ export function HintDialog({
                 color: '#374151',
               }}
             >
-              写下你的想法
+              {t('hintDialog.responseLabel')}
             </label>
             <textarea
               id="response-input"
+              data-test-id="response-input"
               value={responseText}
               onChange={(e) => setResponseText(e.target.value)}
-              placeholder="请输入你对这个提示的理解或思考..."
+              placeholder={t('hintDialog.responsePlaceholder')}
               disabled={isLoading}
               style={{
                 width: '100%',
@@ -212,14 +215,15 @@ export function HintDialog({
                 color: isResponseValid ? '#10b981' : '#6b7280',
               }}
             >
-              <span>{isResponseValid ? '✓ 可以提交了' : `还需要输入 ${charsNeeded} 个字符`}</span>
-              <span>{charCount} 字符</span>
+              <span>{isResponseValid ? `✓ ${t('hintDialog.readyToSubmit')}` : t('hintDialog.charsNeeded', { count: charsNeeded })}</span>
+              <span>{t('hintDialog.charCount', { count: charCount })}</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="button"
+              data-test-id="cancel-button"
               onClick={onCancel}
               disabled={isLoading}
               style={{
@@ -233,10 +237,11 @@ export function HintDialog({
                 cursor: isLoading ? 'not-allowed' : 'pointer',
               }}
             >
-              重新开始
+              {t('hintDialog.cancelButton')}
             </button>
             <button
               type="submit"
+              data-test-id="submit-button"
               disabled={!isResponseValid || isLoading}
               style={{
                 flex: 2,
@@ -250,13 +255,14 @@ export function HintDialog({
                 cursor: isResponseValid && !isLoading ? 'pointer' : 'not-allowed',
               }}
             >
-              {isLoading ? '处理中...' : '提交回答'}
+              {isLoading ? t('hintDialog.processing') : t('hintDialog.submitButton')}
             </button>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
             <button
               type="button"
+              data-test-id="reveal-button"
               onClick={onReveal}
               disabled={!canReveal || isLoading}
               style={{
@@ -271,10 +277,11 @@ export function HintDialog({
                 cursor: canReveal && !isLoading ? 'pointer' : 'not-allowed',
               }}
             >
-              显示解答
+              {t('hintDialog.revealButton')}
             </button>
             <button
               type="button"
+              data-test-id="complete-button"
               onClick={onComplete}
               disabled={currentLayer !== HintLayer.STEP || isLoading}
               style={{
@@ -293,7 +300,7 @@ export function HintDialog({
                 cursor: currentLayer === HintLayer.STEP && !isLoading ? 'pointer' : 'not-allowed',
               }}
             >
-              我做出来了！
+              {t('hintDialog.completeButton')}
             </button>
           </div>
         </form>

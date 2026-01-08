@@ -79,6 +79,63 @@ class TestDashboardEndpoint:
         assert len(data["problem_type_stats"]) > 0
 
 
+class TestTrendEndpoint:
+    @pytest.mark.contract
+    def test_returns_trend_data(self, client: TestClient) -> None:
+        response = client.get("/api/v1/stats/trend")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert "daily_stats" in data
+        assert "period_days" in data
+        assert data["period_days"] == 7
+        assert len(data["daily_stats"]) == 7
+
+    @pytest.mark.contract
+    def test_trend_daily_stats_structure(self, client: TestClient) -> None:
+        response = client.get("/api/v1/stats/trend")
+        data = response.json()
+
+        for day_stat in data["daily_stats"]:
+            assert "date" in day_stat
+            assert "total" in day_stat
+            assert "completed" in day_stat
+            assert "revealed" in day_stat
+
+    @pytest.mark.contract
+    def test_trend_custom_days(self, client: TestClient) -> None:
+        response = client.get("/api/v1/stats/trend?days=14")
+        data = response.json()
+
+        assert data["period_days"] == 14
+        assert len(data["daily_stats"]) == 14
+
+
+class TestGoalsEndpoint:
+    @pytest.mark.contract
+    def test_returns_goal_progress(self, client: TestClient) -> None:
+        response = client.get("/api/v1/stats/goals")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert "daily_target" in data
+        assert "daily_completed" in data
+        assert "daily_progress" in data
+        assert "weekly_target" in data
+        assert "weekly_completed" in data
+        assert "weekly_progress" in data
+
+    @pytest.mark.contract
+    def test_goal_custom_targets(self, client: TestClient) -> None:
+        response = client.get("/api/v1/stats/goals?daily_target=5&weekly_target=25")
+        data = response.json()
+
+        assert data["daily_target"] == 5
+        assert data["weekly_target"] == 25
+
+
 class TestSessionsListEndpoint:
     @pytest.mark.contract
     def test_returns_sessions_list(self, client: TestClient) -> None:

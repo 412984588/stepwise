@@ -4,7 +4,13 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
-from backend.schemas.stats import StatsSummary, SessionListResponse, DashboardResponse
+from backend.schemas.stats import (
+    StatsSummary,
+    SessionListResponse,
+    DashboardResponse,
+    TrendDataResponse,
+    LearningGoalProgress,
+)
 from backend.services.stats_service import StatsService
 
 router = APIRouter(prefix="/stats", tags=["stats"])
@@ -38,3 +44,22 @@ def list_sessions(
 def get_dashboard(db: Session = Depends(get_db)) -> DashboardResponse:
     service = StatsService(db)
     return service.get_dashboard()
+
+
+@router.get("/trend", response_model=TrendDataResponse)
+def get_trend_data(
+    days: int = Query(default=7, ge=1, le=30),
+    db: Session = Depends(get_db),
+) -> TrendDataResponse:
+    service = StatsService(db)
+    return service.get_trend_data(days=days)
+
+
+@router.get("/goals", response_model=LearningGoalProgress)
+def get_goal_progress(
+    daily_target: int = Query(default=3, ge=1, le=20),
+    weekly_target: int = Query(default=15, ge=1, le=100),
+    db: Session = Depends(get_db),
+) -> LearningGoalProgress:
+    service = StatsService(db)
+    return service.get_goal_progress(daily_target=daily_target, weekly_target=weekly_target)

@@ -3,6 +3,8 @@ import { apiClient, ApiRequestError } from './api'
 export interface StartSessionRequest {
   problem_text: string
   client_id?: string
+  locale?: string
+  grade_level?: number
 }
 
 export interface StartSessionResponse {
@@ -124,10 +126,24 @@ export interface DashboardData {
   encouragement: EncouragementMessage
 }
 
-export async function startSession(problemText: string): Promise<StartSessionResponse> {
-  return apiClient.post<StartSessionResponse>('/sessions/start', {
+export async function startSession(
+  problemText: string,
+  options?: { locale?: string; gradeLevel?: number; userId?: string }
+): Promise<StartSessionResponse> {
+  const payload: StartSessionRequest = {
     problem_text: problemText,
-  })
+  }
+  if (options?.locale) {
+    payload.locale = options.locale
+  }
+  if (options?.gradeLevel) {
+    payload.grade_level = options.gradeLevel
+  }
+  const headers: Record<string, string> = {}
+  if (options?.userId) {
+    headers['X-User-ID'] = options.userId
+  }
+  return apiClient.post<StartSessionResponse>('/sessions/start', payload, { headers })
 }
 
 export async function getSession(sessionId: string): Promise<SessionResponse> {
@@ -163,7 +179,41 @@ export async function getSessionHistory(
 }
 
 export async function getDashboard(): Promise<DashboardData> {
-  return apiClient.get<DashboardData>('/stats/dashboard')
+  return apiClient.get<DashboardData>('/stats/dashboard');
+}
+
+export interface DailyStats {
+  date: string;
+  total: number;
+  completed: number;
+  revealed: number;
+}
+
+export interface TrendData {
+  daily_stats: DailyStats[];
+  period_days: number;
+}
+
+export interface GoalProgress {
+  daily_target: number;
+  daily_completed: number;
+  daily_progress: number;
+  weekly_target: number;
+  weekly_completed: number;
+  weekly_progress: number;
+}
+
+export async function getTrendData(days: number = 7): Promise<TrendData> {
+  return apiClient.get<TrendData>(`/stats/trend?days=${days}`);
+}
+
+export async function getGoalProgress(
+  dailyTarget: number = 3,
+  weeklyTarget: number = 15
+): Promise<GoalProgress> {
+  return apiClient.get<GoalProgress>(
+    `/stats/goals?daily_target=${dailyTarget}&weekly_target=${weeklyTarget}`
+  );
 }
 
 export function isApiError(error: unknown): error is ApiRequestError {

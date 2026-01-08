@@ -1,0 +1,122 @@
+{
+  "app": {
+    "title": "StepWise Math Tutor",
+    "subtitle": "Socratic Math Coach - Guiding you step by step",
+    "footer": "No direct answers - guiding you to think independently 💡"
+  },
+  "problemInput": {
+    "label": "Enter your math problem",
+    "placeholder": "For example: 3x + 5 = 14",
+    "supportedTypes": "Supports equations, geometry, arithmetic, and more",
+    "submitButton": "Start Solving",
+    "analyzing": "Analyzing..."
+  },
+  "hintDialog": {
+    "layers": {
+      "concept": "Concept Hint",
+      "strategy": "Strategy Hint",
+      "step": "Step Hint",
+      "completed": "Completed",
+      "revealed": "Full Solution"
+    },
+    "problem": "Problem:",
+    "responseLabel": "Write your thoughts",
+    "responsePlaceholder": "Please enter your understanding or thinking about this hint...",
+    "charsNeeded": "Need {count} more characters",
+    "readyToSubmit": "Ready to submit",
+    "charCount": "{count} characters",
+    "cancelButton": "Start Over",
+    "submitButton": "Submit Answer",
+    "processing": "Processing...",
+    "revealButton": "Show Solution",
+    "completeButton": "I solved it!",
+    "downgradeMessage": "Let me help you understand this concept from a different angle!",
+    "confusionMessage": "That's okay, let's think about it some more!"
+  },
+  "solutionViewer": {
+    "title": "Complete Solution",
+    "helpMessage": "Here are the complete solution steps to help you learn!",
+    "stepsTitle": "Solution Steps",
+    "finalAnswer": "Final Answer",
+    "nextButton": "Practice Next Problem"
+  },
+  "dashboard": {
+    "title": "Learning Statistics",
+    "backButton": "Back to Practice",
+    "viewStats": "View Learning Stats",
+    "stats": {
+      "learningDays": "Learning Days",
+      "completionRate": "Independent Completion Rate",
+      "weeklyPractice": "Weekly Practice",
+      "streak": "Learning Streak",
+      "days": "days",
+      "problems": "problems"
+    },
+    "problemTypes": "Problem Type Performance",
+    "recentSessions": "Recent Practice",
+    "trendChart": {
+      "title": "Practice Trend",
+      "subtitle": "Last 7 days",
+      "independent": "Independent",
+      "total": "Total Practice"
+    },
+    "goals": {
+      "title": "Learning Goals",
+      "daily": "Daily Goal",
+      "weekly": "Weekly Goal",
+      "achieved": "Achieved!"
+    },
+    "encouragement": {
+      "loading": "Loading..."
+    }
+  },
+  "sessionHistory": {
+    "independent": "Independent",
+    "withHints": "With Hints",
+    "revealed": "Revealed",
+    "inProgress": "In Progress"
+  },
+  "errors": {
+    "loadingFailed": "Failed to load data. Please try again.",
+    "unknownError": "An unknown error occurred. Please try again."
+  },
+  "gradeSelector": {
+    "label": "Grade Level",
+    "placeholder": "Select grade",
+    "grades": {
+      "4": "4th Grade",
+      "5": "5th Grade",
+      "6": "6th Grade",
+      "7": "7th Grade",
+      "8": "8th Grade",
+      "9": "9th Grade"
+    }
+  },
+  "billing": {
+    "tiers": {
+      "free": "Free",
+      "pro": "Pro",
+      "family": "Family"
+    },
+    "usage": {
+      "limited": "{used}/{limit} problems today",
+      "unlimited": "Unlimited problems"
+    },
+    "upgradeButton": "Upgrade",
+    "modal": {
+      "title": "Upgrade Your Plan"
+    },
+    "perMonth": "/mo",
+    "currentPlan": "Current Plan",
+    "selectPlan": "Select",
+    "features": {
+      "freeProblems": "3 problems per day",
+      "basicHints": "Basic hints",
+      "unlimitedProblems": "Unlimited problems",
+      "allHints": "All hint layers",
+      "dashboard": "Dashboard analytics",
+      "everythingPro": "Everything in Pro",
+      "fiveProfiles": "Up to 5 student profiles"
+    }
+  }
+}

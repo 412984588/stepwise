@@ -117,7 +117,7 @@ class TestStartSessionEmptyInput:
         )
 
         data = response.json()
-        assert "请输入" in data["message"] or "input" in data["message"].lower()
+        assert "请输入" in data["message"] or "enter" in data["message"].lower()
 
     @pytest.mark.contract
     def test_whitespace_only_returns_400(self, client: TestClient) -> None:

@@ -47,20 +47,20 @@ class ApiClient {
     return response.json()
   }
 
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' })
+  get<T>(endpoint: string, options?: { headers?: Record<string, string> }): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET', headers: options?.headers })
   }
 
-  post<T>(endpoint: string, body: unknown): Promise<T> {
-    return this.request<T>(endpoint, { method: 'POST', body })
+  post<T>(endpoint: string, body: unknown, options?: { headers?: Record<string, string> }): Promise<T> {
+    return this.request<T>(endpoint, { method: 'POST', body, headers: options?.headers })
   }
 
-  put<T>(endpoint: string, body: unknown): Promise<T> {
-    return this.request<T>(endpoint, { method: 'PUT', body })
+  put<T>(endpoint: string, body: unknown, options?: { headers?: Record<string, string> }): Promise<T> {
+    return this.request<T>(endpoint, { method: 'PUT', body, headers: options?.headers })
   }
 
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' })
+  delete<T>(endpoint: string, options?: { headers?: Record<string, string> }): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE', headers: options?.headers })
   }
 }
 

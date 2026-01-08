@@ -54,6 +54,81 @@ class UnderstandingLevel(str, Enum):
     Determines whether student advances to next layer or gets more guidance.
     """
 
-    UNDERSTOOD = "understood"  # ≥10字符 且 ≥1关键词 → 进入下一层
-    CONFUSED = "confused"  # <10字符 或 无关键词 → 补充引导
-    EXPLICIT_CONFUSED = "explicit_confused"  # 包含"不懂"、"不知道"等 → 补充引导
+    UNDERSTOOD = "understood"  # ≥10 chars + ≥1 keyword → advance layer
+    CONFUSED = "confused"  # <10 chars or no keywords → more guidance
+    EXPLICIT_CONFUSED = "explicit_confused"  # Contains "don't understand" etc → more guidance
+
+
+class MathTopic(str, Enum):
+    """US K-12 math curriculum topics aligned with Common Core standards.
+
+    Organized by major domains for grades 4-9.
+    """
+
+    # Number & Operations (Grades 4-6)
+    WHOLE_NUMBERS = "whole_numbers"  # Multi-digit operations
+    FRACTIONS = "fractions"  # Fraction operations
+    DECIMALS = "decimals"  # Decimal operations
+    PERCENTS = "percents"  # Percent problems
+    RATIOS = "ratios"  # Ratio and proportion
+
+    # Pre-Algebra (Grades 6-7)
+    INTEGERS = "integers"  # Positive/negative numbers
+    ORDER_OF_OPERATIONS = "order_of_operations"  # PEMDAS
+    EXPRESSIONS = "expressions"  # Algebraic expressions
+    ONE_STEP_EQUATIONS = "one_step_equations"  # x + 5 = 10
+    TWO_STEP_EQUATIONS = "two_step_equations"  # 2x + 3 = 11
+
+    # Algebra (Grades 7-9)
+    LINEAR_EQUATIONS = "linear_equations"  # Multi-step linear equations
+    SYSTEMS_OF_EQUATIONS = "systems_of_equations"  # Two-variable systems
+    QUADRATIC_EQUATIONS = "quadratic_equations"  # ax² + bx + c = 0
+    INEQUALITIES = "inequalities"  # Linear inequalities
+
+    # Geometry (Grades 4-9)
+    AREA_PERIMETER = "area_perimeter"  # 2D measurements
+    VOLUME_SURFACE_AREA = "volume_surface_area"  # 3D measurements
+    ANGLES = "angles"  # Angle relationships
+    TRIANGLES = "triangles"  # Triangle properties
+    COORDINATE_GEOMETRY = "coordinate_geometry"  # Graphing, slope
+
+    # Statistics & Probability (Grades 6-9)
+    MEAN_MEDIAN_MODE = "mean_median_mode"  # Measures of center
+    PROBABILITY = "probability"  # Basic probability
+
+    # Catch-all
+    UNKNOWN = "unknown"
+
+
+class GradeLevel(int, Enum):
+    """US grade levels supported (4th through 9th grade)."""
+
+    GRADE_4 = 4
+    GRADE_5 = 5
+    GRADE_6 = 6
+    GRADE_7 = 7
+    GRADE_8 = 8
+    GRADE_9 = 9
+
+
+class SubscriptionTier(str, Enum):
+    """Subscription tiers for billing.
+
+    FREE: 3 problems/day, basic hints
+    PRO: Unlimited problems, all features
+    FAMILY: Pro features + up to 5 student profiles
+    """
+
+    FREE = "free"
+    PRO = "pro"
+    FAMILY = "family"
+
+
+class SubscriptionStatus(str, Enum):
+    """Status of a Stripe subscription."""
+
+    ACTIVE = "active"  # Subscription is active and paid
+    CANCELED = "canceled"  # User canceled, access until period end
+    PAST_DUE = "past_due"  # Payment failed, grace period
+    UNPAID = "unpaid"  # Payment failed, access revoked
+    TRIALING = "trialing"  # In trial period

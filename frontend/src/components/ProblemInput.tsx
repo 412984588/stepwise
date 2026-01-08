@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from '../i18n'
 
 interface ProblemInputProps {
   onSubmit: (problemText: string) => void
@@ -7,6 +8,7 @@ interface ProblemInputProps {
 }
 
 export function ProblemInput({ onSubmit, isLoading = false, disabled = false }: ProblemInputProps) {
+  const { t } = useTranslation()
   const [problemText, setProblemText] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,13 +33,13 @@ export function ProblemInput({ onSubmit, isLoading = false, disabled = false }: 
             color: '#374151',
           }}
         >
-          输入你的数学题
+          {t('problemInput.label')}
         </label>
         <textarea
           id="problem-input"
           value={problemText}
           onChange={(e) => setProblemText(e.target.value)}
-          placeholder="例如：3x + 5 = 14"
+          placeholder={t('problemInput.placeholder')}
           disabled={isLoading || disabled}
           maxLength={500}
           style={{
@@ -64,7 +66,7 @@ export function ProblemInput({ onSubmit, isLoading = false, disabled = false }: 
             color: '#6b7280',
           }}
         >
-          <span>支持方程、几何、运算等各类数学题</span>
+          <span>{t('problemInput.supportedTypes')}</span>
           <span>{problemText.length}/500</span>
         </div>
       </div>
@@ -84,7 +86,7 @@ export function ProblemInput({ onSubmit, isLoading = false, disabled = false }: 
           transition: 'background-color 0.2s',
         }}
       >
-        {isLoading ? '正在分析...' : '开始解题'}
+        {isLoading ? t('problemInput.analyzing') : t('problemInput.submitButton')}
       </button>
     </form>
   )

@@ -14,11 +14,11 @@ class UnderstandingEvaluator:
     MIN_RESPONSE_LENGTH = 10
 
     EXPLICIT_CONFUSION_PHRASES = [
-        "不懂",
-        "不知道",
-        "不会",
-        "不明白",
-        "看不懂",
+        "不懂", "don't understand", "do not understand",
+        "不知道", "don't know", "do not know",
+        "不会", "can't", "cannot",
+        "不明白", "unclear", "not clear",
+        "看不懂", "confused", "confusing",
         "搞不懂",
         "不理解",
         "没听懂",
@@ -28,17 +28,17 @@ class UnderstandingEvaluator:
 
     KEYWORDS_BY_TYPE = {
         ProblemType.LINEAR_EQUATION_1VAR: [
-            "移项",
-            "等式",
+            "移项", "transposition", "transpose", "move",
+            "等式", "equation",
             "方程",
-            "未知数",
-            "解",
+            "未知数", "variable", "unknown",
+            "解", "solve", "solution",
             "x",
-            "两边",
-            "系数",
-            "常数",
-            "合并",
-            "同类项",
+            "两边", "both sides",
+            "系数", "coefficient",
+            "常数", "constant",
+            "合并", "combine", "combining",
+            "同类项", "like terms",
         ],
         ProblemType.QUADRATIC_EQUATION: [
             "因式",
