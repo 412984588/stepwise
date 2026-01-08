@@ -1,0 +1,39 @@
+# OS
+.DS_Store
+
+# Database
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Test
+.pytest_cache/
+.ruff_cache/
+test-results/
+playwright-report/
+coverage/
+htmlcov/
+
+# Build
+*.egg
+*.whl
+
+# Tool configs (optional - may want to track these)
+.opencode/
+.specify/
