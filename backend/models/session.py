@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import uuid
 
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
@@ -15,6 +16,10 @@ class HintSession(BaseModel):
     status = Column(SQLEnum(SessionStatus), nullable=False, default=SessionStatus.ACTIVE)
     confusion_count = Column(Integer, nullable=False, default=0)
     used_full_solution = Column(Boolean, nullable=False, default=False)
+    parent_email = Column(String(255), nullable=True)
+    session_access_token = Column(
+        String(36), nullable=True, index=True
+    )  # For user-facing endpoints
     started_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     last_active_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
@@ -23,3 +28,8 @@ class HintSession(BaseModel):
 
     def touch(self) -> None:
         self.last_active_at = datetime.now(timezone.utc)
+
+    @staticmethod
+    def generate_access_token() -> str:
+        """Generate a secure session access token."""
+        return str(uuid.uuid4())

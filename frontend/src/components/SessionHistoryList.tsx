@@ -1,4 +1,4 @@
-import { SessionListItem } from '../services/sessionApi'
+import { SessionListItem, downloadSessionPDF } from '../services/sessionApi'
 
 interface SessionHistoryListProps {
   sessions: SessionListItem[]
@@ -69,19 +69,43 @@ export function SessionHistoryList({ sessions }: SessionHistoryListProps) {
               {session.confusion_count > 0 && ` · 困惑${session.confusion_count}次`}
             </div>
           </div>
-          <div
-            style={{
-              padding: '4px 12px',
-              fontSize: '12px',
-              fontWeight: 500,
-              color: STATUS_COLORS[session.status.toLowerCase()] || '#6b7280',
-              backgroundColor: `${STATUS_COLORS[session.status.toLowerCase()] || '#6b7280'}15`,
-              borderRadius: '12px',
-              flexShrink: 0,
-              marginLeft: '12px',
-            }}
-          >
-            {STATUS_LABELS[session.status.toLowerCase()] || session.status}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              data-testid="download-pdf"
+              onClick={async () => {
+                try {
+                  await downloadSessionPDF(session.session_id, session.session_access_token)
+                } catch (error) {
+                  alert(error instanceof Error ? error.message : '下载失败，请稍后重试')
+                }
+              }}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                color: '#3b82f6',
+                backgroundColor: 'white',
+                border: '1px solid #3b82f6',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+              title="下载报告"
+            >
+              📄 报告
+            </button>
+            <div
+              style={{
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: 500,
+                color: STATUS_COLORS[session.status.toLowerCase()] || '#6b7280',
+                backgroundColor: `${STATUS_COLORS[session.status.toLowerCase()] || '#6b7280'}15`,
+                borderRadius: '12px',
+                flexShrink: 0,
+              }}
+            >
+              {STATUS_LABELS[session.status.toLowerCase()] || session.status}
+            </div>
           </div>
         </div>
       ))}

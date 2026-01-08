@@ -13,12 +13,7 @@ const tierColors: Record<string, { bg: string; text: string }> = {
   family: { bg: '#f3e8ff', text: '#7c3aed' },
 }
 
-export function SubscriptionBanner({
-  tier,
-  used,
-  limit,
-  onUpgradeClick,
-}: SubscriptionBannerProps) {
+export function SubscriptionBanner({ tier, used, limit, onUpgradeClick }: SubscriptionBannerProps) {
   const { t } = useTranslation()
   const colors = tierColors[tier] || tierColors.free
   const progress = limit ? Math.min((used / limit) * 100, 100) : 0

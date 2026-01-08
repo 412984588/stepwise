@@ -1,14 +1,13 @@
-import { GoalProgress as GoalProgressData } from '../services/sessionApi';
-import { useTranslation } from '../i18n';
+import { GoalProgress as GoalProgressData } from '../services/sessionApi'
 
 interface GoalProgressProps {
-  data: GoalProgressData;
+  data: GoalProgressData
 }
 
 export function GoalProgress({ data }: GoalProgressProps) {
-  const { t } = useTranslation();
   return (
     <div
+      data-testid="dashboard-goals"
       style={{
         backgroundColor: 'white',
         borderRadius: '12px',
@@ -18,46 +17,43 @@ export function GoalProgress({ data }: GoalProgressProps) {
       }}
     >
       <div style={{ fontWeight: 600, color: '#374151', marginBottom: '16px' }}>
-        🎯 {t('dashboard.goals.title')}
+        🎯 Learning Goals
       </div>
 
       <div style={{ display: 'flex', gap: '20px' }}>
         <ProgressRing
-          label={t('dashboard.goals.daily')}
+          label="Daily Goal"
           completed={data.daily_completed}
           target={data.daily_target}
           progress={data.daily_progress}
           color="#3b82f6"
-          achievedText={t('dashboard.goals.achieved')}
         />
         <ProgressRing
-          label={t('dashboard.goals.weekly')}
+          label="Weekly Goal"
           completed={data.weekly_completed}
           target={data.weekly_target}
           progress={data.weekly_progress}
           color="#8b5cf6"
-          achievedText={t('dashboard.goals.achieved')}
         />
       </div>
     </div>
-  );
+  )
 }
 
 interface ProgressRingProps {
-  label: string;
-  completed: number;
-  target: number;
-  progress: number;
-  color: string;
-  achievedText: string;
+  label: string
+  completed: number
+  target: number
+  progress: number
+  color: string
 }
 
-function ProgressRing({ label, completed, target, progress, color, achievedText }: ProgressRingProps) {
-  const size = 80;
-  const strokeWidth = 8;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (progress / 100) * circumference;
+function ProgressRing({ label, completed, target, progress, color }: ProgressRingProps) {
+  const size = 80
+  const strokeWidth = 8
+  const radius = (size - strokeWidth) / 2
+  const circumference = radius * 2 * Math.PI
+  const offset = circumference - (progress / 100) * circumference
 
   return (
     <div style={{ flex: 1, textAlign: 'center' }}>
@@ -96,10 +92,8 @@ function ProgressRing({ label, completed, target, progress, color, achievedText 
       </div>
       <div style={{ marginTop: '28px', fontSize: '13px', color: '#6b7280' }}>{label}</div>
       {progress >= 100 && (
-        <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '4px' }}>
-          ✅ {achievedText}
-        </div>
+        <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '4px' }}>✅ Achieved!</div>
       )}
     </div>
-  );
+  )
 }

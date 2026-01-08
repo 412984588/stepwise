@@ -9,6 +9,7 @@ export interface StartSessionRequest {
 
 export interface StartSessionResponse {
   session_id: string
+  session_access_token: string
   problem_type: string
   current_layer: string
   hint_content: string
@@ -69,6 +70,7 @@ export interface CompleteResponse {
   session_id: string
   status: string
   message: string
+  email_sent?: boolean
 }
 
 export interface StatsSummary {
@@ -82,6 +84,7 @@ export interface StatsSummary {
 
 export interface SessionListItem {
   session_id: string
+  session_access_token: string
   problem_text: string
   status: string
   final_layer: string
@@ -163,8 +166,15 @@ export async function revealSolution(sessionId: string): Promise<RevealResponse>
   return apiClient.post<RevealResponse>(`/sessions/${sessionId}/reveal`, {})
 }
 
-export async function completeSession(sessionId: string): Promise<CompleteResponse> {
-  return apiClient.post<CompleteResponse>(`/sessions/${sessionId}/complete`, {})
+export async function completeSession(
+  sessionId: string,
+  email?: string
+): Promise<CompleteResponse> {
+  const payload: { email?: string } = {}
+  if (email) {
+    payload.email = email
+  }
+  return apiClient.post<CompleteResponse>(`/sessions/${sessionId}/complete`, payload)
 }
 
 export async function getStatsSummary(): Promise<StatsSummary> {
@@ -179,32 +189,32 @@ export async function getSessionHistory(
 }
 
 export async function getDashboard(): Promise<DashboardData> {
-  return apiClient.get<DashboardData>('/stats/dashboard');
+  return apiClient.get<DashboardData>('/stats/dashboard')
 }
 
 export interface DailyStats {
-  date: string;
-  total: number;
-  completed: number;
-  revealed: number;
+  date: string
+  total: number
+  completed: number
+  revealed: number
 }
 
 export interface TrendData {
-  daily_stats: DailyStats[];
-  period_days: number;
+  daily_stats: DailyStats[]
+  period_days: number
 }
 
 export interface GoalProgress {
-  daily_target: number;
-  daily_completed: number;
-  daily_progress: number;
-  weekly_target: number;
-  weekly_completed: number;
-  weekly_progress: number;
+  daily_target: number
+  daily_completed: number
+  daily_progress: number
+  weekly_target: number
+  weekly_completed: number
+  weekly_progress: number
 }
 
 export async function getTrendData(days: number = 7): Promise<TrendData> {
-  return apiClient.get<TrendData>(`/stats/trend?days=${days}`);
+  return apiClient.get<TrendData>(`/stats/trend?days=${days}`)
 }
 
 export async function getGoalProgress(
@@ -213,7 +223,7 @@ export async function getGoalProgress(
 ): Promise<GoalProgress> {
   return apiClient.get<GoalProgress>(
     `/stats/goals?daily_target=${dailyTarget}&weekly_target=${weeklyTarget}`
-  );
+  )
 }
 
 export function isApiError(error: unknown): error is ApiRequestError {
@@ -228,4 +238,70 @@ export function getErrorMessage(error: unknown): string {
     return error.message
   }
   return '发生了未知错误，请稍后重试'
+}
+
+export interface ReportEventRequest {
+  event_type: string
+  details?: Record<string, any>
+}
+
+export async function reportEvent(
+  sessionId: string,
+  eventType: string,
+  details?: Record<string, any>
+): Promise<void> {
+  // Note: This is a fire-and-forget call for analytics
+  // We don't want to block the UI if event logging fails
+  try {
+    await apiClient.post(`/sessions/${sessionId}/events`, {
+      event_type: eventType,
+      details,
+    })
+  } catch (error) {
+    // Silently fail - event logging should not disrupt user experience
+    console.warn('Failed to log event:', eventType, error)
+  }
+}
+
+export async function downloadSessionPDF(
+  sessionId: string,
+  sessionAccessToken: string
+): Promise<void> {
+  const url = `${apiClient['baseUrl']}/reports/session/${sessionId}/pdf`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'X-Session-Access-Token': sessionAccessToken,
+    },
+  })
+
+  if (response.status === 403) {
+    throw new Error('Session access token invalid or expired')
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to download PDF: ${response.statusText}`)
+  }
+
+  const blob = await response.blob()
+  const blobUrl = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = blobUrl
+  link.download = `stepwise_session_${sessionId}.pdf`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(blobUrl)
+}
+
+export interface SessionSummary {
+  headline: string
+  performance_level: string
+  insights: string[]
+  recommendation: string
+}
+
+export async function getSessionSummary(sessionId: string): Promise<SessionSummary> {
+  return apiClient.get<SessionSummary>(`/reports/session/${sessionId}/summary`)
 }

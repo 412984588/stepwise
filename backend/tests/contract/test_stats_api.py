@@ -5,9 +5,13 @@ from fastapi.testclient import TestClient
 
 
 class TestStatsSummaryEndpoint:
+    """Tests for /stats/summary endpoint (requires API key)."""
+
     @pytest.mark.contract
-    def test_returns_stats_summary(self, client: TestClient) -> None:
-        response = client.get("/api/v1/stats/summary")
+    def test_returns_stats_summary(
+        self, client: TestClient, api_key_headers: dict[str, str]
+    ) -> None:
+        response = client.get("/api/v1/stats/summary", headers=api_key_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -20,8 +24,10 @@ class TestStatsSummaryEndpoint:
         assert "avg_layers_to_complete" in data
 
     @pytest.mark.contract
-    def test_stats_types_are_correct(self, client: TestClient) -> None:
-        response = client.get("/api/v1/stats/summary")
+    def test_stats_types_are_correct(
+        self, client: TestClient, api_key_headers: dict[str, str]
+    ) -> None:
+        response = client.get("/api/v1/stats/summary", headers=api_key_headers)
         data = response.json()
 
         assert isinstance(data["total_sessions"], int)
@@ -31,16 +37,30 @@ class TestStatsSummaryEndpoint:
         assert isinstance(data["completion_rate"], (int, float))
 
     @pytest.mark.contract
-    def test_stats_after_creating_session(self, client: TestClient) -> None:
-        initial_response = client.get("/api/v1/stats/summary")
+    def test_stats_after_creating_session(
+        self, client: TestClient, api_key_headers: dict[str, str]
+    ) -> None:
+        initial_response = client.get("/api/v1/stats/summary", headers=api_key_headers)
         initial_total = initial_response.json()["total_sessions"]
 
         client.post("/api/v1/sessions/start", json={"problem_text": "3x + 5 = 14"})
 
-        after_response = client.get("/api/v1/stats/summary")
+        after_response = client.get("/api/v1/stats/summary", headers=api_key_headers)
         after_total = after_response.json()["total_sessions"]
 
         assert after_total == initial_total + 1
+
+    @pytest.mark.contract
+    def test_summary_requires_api_key(self, client: TestClient) -> None:
+        """Test that /stats/summary returns 401 without API key."""
+        response = client.get("/api/v1/stats/summary")
+        assert response.status_code == 401
+
+    @pytest.mark.contract
+    def test_summary_rejects_invalid_api_key(self, client: TestClient) -> None:
+        """Test that /stats/summary returns 401 with invalid API key."""
+        response = client.get("/api/v1/stats/summary", headers={"X-API-Key": "invalid-key"})
+        assert response.status_code == 401
 
 
 class TestDashboardEndpoint:

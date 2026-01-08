@@ -1,16 +1,23 @@
 """FastAPI application entry point for StepWise backend."""
 
+import logging
 import os
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.api import api_router
 from backend.database.engine import init_db
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -35,9 +42,10 @@ app = FastAPI(
 
 # CORS configuration
 # In production, replace with specific origins
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(
-    ","
-)
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:3000,http://127.0.0.1:3001",
+).split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,13 +65,43 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException) ->
 
     Converts {"detail": {"error": "...", "message": "..."}}
     to {"error": "...", "message": "..."}
+
+    Also preserves any headers from the HTTPException (e.g., Retry-After for 429 responses).
     """
     content: dict[str, Any]
     if isinstance(exc.detail, dict):
         content = exc.detail
     else:
         content = {"error": "ERROR", "message": str(exc.detail)}
-    return JSONResponse(status_code=exc.status_code, content=content)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content,
+        headers=exc.headers if exc.headers else None,
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """
+    Global exception handler to prevent stack traces from leaking to clients.
+
+    Logs the full error server-side but returns a safe generic message to clients.
+    """
+    # Log the full error server-side
+    logger.error(
+        f"Unhandled exception: {exc}",
+        exc_info=True,
+        extra={"path": request.url.path, "method": request.method},
+    )
+
+    # Return safe error to client (no stack trace)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "INTERNAL_SERVER_ERROR",
+            "message": "An internal error occurred. Please try again later.",
+        },
+    )
 
 
 @app.get("/")

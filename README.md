@@ -144,11 +144,11 @@ StepWise/
 
 ## Subscription Tiers
 
-| Tier | Price | Daily Limit | Features |
-|------|-------|-------------|----------|
-| **Free** | $0 | 3 problems/day | Basic hints, concept/strategy/step layers |
-| **Pro** | $9.99/mo | Unlimited | All features, priority support |
-| **Family** | $19.99/mo | Unlimited | Pro features + up to 5 user profiles |
+| Tier       | Price     | Daily Limit    | Features                                  |
+| ---------- | --------- | -------------- | ----------------------------------------- |
+| **Free**   | $0        | 3 problems/day | Basic hints, concept/strategy/step layers |
+| **Pro**    | $9.99/mo  | Unlimited      | All features, priority support            |
+| **Family** | $19.99/mo | Unlimited      | Pro features + up to 5 user profiles      |
 
 ## Testing
 
@@ -247,6 +247,7 @@ DATABASE_URL=postgresql://user:password@host:5432/stepwise
 ## Development Guidelines
 
 See [AGENTS.md](./AGENTS.md) for detailed development guidelines including:
+
 - Code style conventions
 - Testing workflow (TDD)
 - Build commands

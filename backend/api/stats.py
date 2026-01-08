@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
+from backend.api.dependencies import verify_api_key, check_rate_limit
+from backend.services.rate_limiter import get_stats_rate_limiter
 from backend.schemas.stats import (
     StatsSummary,
     SessionListResponse,
@@ -17,7 +19,11 @@ router = APIRouter(prefix="/stats", tags=["stats"])
 
 
 @router.get("/summary", response_model=StatsSummary)
-def get_stats_summary(db: Session = Depends(get_db)) -> StatsSummary:
+def get_stats_summary(
+    db: Session = Depends(get_db),
+    api_key: str = Depends(verify_api_key),
+    _rate_limit: None = Depends(check_rate_limit(get_stats_rate_limiter())),
+) -> StatsSummary:
     service = StatsService(db)
     return service.get_summary()
 
@@ -41,7 +47,10 @@ def list_sessions(
 
 
 @router.get("/dashboard", response_model=DashboardResponse)
-def get_dashboard(db: Session = Depends(get_db)) -> DashboardResponse:
+def get_dashboard(
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(check_rate_limit(get_stats_rate_limiter())),
+) -> DashboardResponse:
     service = StatsService(db)
     return service.get_dashboard()
 

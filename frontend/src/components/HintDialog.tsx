@@ -9,7 +9,7 @@ interface HintDialogProps {
   onRespond: (responseText: string) => void
   onCancel: () => void
   onReveal?: () => void
-  onComplete?: () => void
+  onComplete?: (email?: string) => void
   isLoading?: boolean
   confusionCount?: number
   isDowngrade?: boolean
@@ -49,6 +49,8 @@ export function HintDialog({
 }: HintDialogProps) {
   const { t } = useTranslation()
   const [responseText, setResponseText] = useState('')
+  const [email, setEmail] = useState('')
+  const [showEmailError, setShowEmailError] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +58,21 @@ export function HintDialog({
       onRespond(responseText.trim())
       setResponseText('')
     }
+  }
+
+  const handleComplete = () => {
+    const trimmedEmail = email.trim()
+    if (trimmedEmail && !isValidEmail(trimmedEmail)) {
+      setShowEmailError(true)
+      return
+    }
+    setShowEmailError(false)
+    onComplete?.(trimmedEmail || undefined)
+  }
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
   }
 
   const charCount = responseText.trim().length
@@ -83,7 +100,9 @@ export function HintDialog({
           alignItems: 'center',
         }}
       >
-        <span id="hint-layer-label" style={{ fontWeight: 600 }} data-test-id="hint-layer-label">{t(LAYER_KEYS[currentLayer])}</span>
+        <span id="hint-layer-label" style={{ fontWeight: 600 }} data-test-id="hint-layer-label">
+          {t(LAYER_KEYS[currentLayer])}
+        </span>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[HintLayer.CONCEPT, HintLayer.STRATEGY, HintLayer.STEP].map((layer, idx) => (
             <div
@@ -139,7 +158,9 @@ export function HintDialog({
             borderLeft: `4px solid ${LAYER_COLORS[currentLayer]}`,
           }}
         >
-          <p style={{ margin: 0, lineHeight: 1.6, color: '#1e40af' }} data-test-id="hint-content">{hintContent}</p>
+          <p style={{ margin: 0, lineHeight: 1.6, color: '#1e40af' }} data-test-id="hint-content">
+            {hintContent}
+          </p>
         </div>
 
         {isDowngrade && (
@@ -215,7 +236,11 @@ export function HintDialog({
                 color: isResponseValid ? '#10b981' : '#6b7280',
               }}
             >
-              <span>{isResponseValid ? `✓ ${t('hintDialog.readyToSubmit')}` : t('hintDialog.charsNeeded', { count: charsNeeded })}</span>
+              <span>
+                {isResponseValid
+                  ? `✓ ${t('hintDialog.readyToSubmit')}`
+                  : t('hintDialog.charsNeeded', { count: charsNeeded })}
+              </span>
               <span>{t('hintDialog.charCount', { count: charCount })}</span>
             </div>
           </div>
@@ -259,6 +284,56 @@ export function HintDialog({
             </button>
           </div>
 
+          {currentLayer === HintLayer.STEP && (
+            <div style={{ marginTop: '16px', marginBottom: '12px' }}>
+              <label
+                htmlFor="email-input"
+                style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#374151',
+                }}
+              >
+                {t('hintDialog.emailLabel')}
+              </label>
+              <input
+                id="email-input"
+                data-test-id="email-input"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setShowEmailError(false)
+                }}
+                placeholder={t('hintDialog.emailPlaceholder')}
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  border: `2px solid ${showEmailError ? '#ef4444' : '#e5e7eb'}`,
+                  borderRadius: '8px',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+              />
+              {showEmailError && (
+                <div
+                  style={{
+                    marginTop: '4px',
+                    fontSize: '12px',
+                    color: '#ef4444',
+                  }}
+                >
+                  {t('hintDialog.emailInvalid')}
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
             <button
               type="button"
@@ -282,7 +357,7 @@ export function HintDialog({
             <button
               type="button"
               data-test-id="complete-button"
-              onClick={onComplete}
+              onClick={handleComplete}
               disabled={currentLayer !== HintLayer.STEP || isLoading}
               style={{
                 flex: 1,

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ProblemInput } from './components/ProblemInput'
 import { HintDialog } from './components/HintDialog'
 import { ErrorMessage } from './components/ErrorMessage'
+import { SuccessMessage } from './components/SuccessMessage'
 import { SolutionViewer } from './components/SolutionViewer'
 import { Dashboard } from './components/Dashboard'
 import { GradeSelector, GradeLevel } from './components/GradeSelector'
@@ -24,6 +25,7 @@ type AppView = 'main' | 'dashboard'
 
 interface SessionState {
   sessionId: string
+  sessionAccessToken: string
   problemText: string
   currentLayer: HintLayer
   hintContent: string
@@ -46,6 +48,7 @@ function App() {
   const [solution, setSolution] = useState<SolutionState | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [gradeLevel, setGradeLevel] = useState<GradeLevel | null>(null)
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -70,6 +73,7 @@ function App() {
   const handleStartSession = async (problemText: string) => {
     setIsLoading(true)
     setError(null)
+    setSuccessMessage(null)
     setSolution(null)
 
     try {
@@ -80,6 +84,7 @@ function App() {
       })
       setSession({
         sessionId: response.session_id,
+        sessionAccessToken: response.session_access_token,
         problemText,
         currentLayer: response.current_layer.toLowerCase() as HintLayer,
         hintContent: response.hint_content,
@@ -138,15 +143,22 @@ function App() {
     }
   }
 
-  const handleComplete = async () => {
+  const handleComplete = async (email?: string) => {
     if (!session) return
 
     setIsLoading(true)
     setError(null)
+    setSuccessMessage(null)
 
     try {
-      await completeSession(session.sessionId)
+      const response = await completeSession(session.sessionId, email)
       setSession(null)
+
+      if (email && response.email_sent) {
+        setSuccessMessage(t('hintDialog.emailSent'))
+      } else if (email && !response.email_sent) {
+        setError(t('hintDialog.emailFailed'))
+      }
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -218,12 +230,13 @@ function App() {
           >
             StepWise
           </h1>
-          <p style={{ color: '#6b7280', fontSize: '16px' }}>
-            {t('app.subtitle')}
-          </p>
+          <p style={{ color: '#6b7280', fontSize: '16px' }}>{t('app.subtitle')}</p>
         </header>
 
         {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
+        {successMessage && (
+          <SuccessMessage message={successMessage} onDismiss={() => setSuccessMessage(null)} />
+        )}
 
         {subscription && view === 'main' && !session && !solution && (
           <SubscriptionBanner
@@ -252,13 +265,10 @@ function App() {
               boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
             }}
           >
-            <GradeSelector
-              value={gradeLevel}
-              onChange={setGradeLevel}
-              disabled={isLoading}
-            />
+            <GradeSelector value={gradeLevel} onChange={setGradeLevel} disabled={isLoading} />
             <ProblemInput onSubmit={handleStartSession} isLoading={isLoading} />
             <button
+              data-testid="nav-dashboard"
               onClick={() => setView('dashboard')}
               style={{
                 width: '100%',
@@ -272,7 +282,7 @@ function App() {
                 cursor: 'pointer',
               }}
             >
-              📊 {t('dashboard.viewStats')}
+              📊 View Learning Stats
             </button>
           </div>
         ) : (

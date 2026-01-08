@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import {
   getDashboard,
   getTrendData,
@@ -6,11 +6,12 @@ import {
   DashboardData,
   TrendData,
   GoalProgress as GoalProgressData,
-} from '../services/sessionApi';
-import { SessionHistoryList } from './SessionHistoryList';
-import { TrendChart } from './TrendChart';
-import { GoalProgress } from './GoalProgress';
-import { useTranslation } from '../i18n';
+} from '../services/sessionApi'
+import { SessionHistoryList } from './SessionHistoryList'
+import { TrendChart } from './TrendChart'
+import { GoalProgress } from './GoalProgress'
+import { SessionSummary } from './SessionSummary'
+import { useTranslation } from '../i18n'
 
 interface DashboardProps {
   onBack: () => void
@@ -46,7 +47,11 @@ export function Dashboard({ onBack }: DashboardProps) {
   }, [t])
 
   if (isLoading) {
-    return <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>{t('dashboard.encouragement.loading')}</div>
+    return (
+      <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+        {t('dashboard.encouragement.loading')}
+      </div>
+    )
   }
 
   if (error) {
@@ -56,7 +61,7 @@ export function Dashboard({ onBack }: DashboardProps) {
   if (!data) return null
 
   return (
-    <div>
+    <div data-testid="dashboard-page">
       <div
         style={{
           marginBottom: '16px',
@@ -65,8 +70,11 @@ export function Dashboard({ onBack }: DashboardProps) {
           alignItems: 'center',
         }}
       >
-        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 600, color: '#1f2937' }}>{t('dashboard.title')}</h2>
+        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 600, color: '#1f2937' }}>
+          Learning Statistics
+        </h2>
         <button
+          data-testid="dashboard-back"
           onClick={onBack}
           style={{
             padding: '8px 16px',
@@ -78,7 +86,7 @@ export function Dashboard({ onBack }: DashboardProps) {
             cursor: 'pointer',
           }}
         >
-          {t('dashboard.backButton')}
+          Back to Practice
         </button>
       </div>
 
@@ -100,6 +108,7 @@ export function Dashboard({ onBack }: DashboardProps) {
       </div>
 
       <div
+        data-testid="dashboard-summary"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
@@ -109,30 +118,37 @@ export function Dashboard({ onBack }: DashboardProps) {
       >
         <StatCard
           icon="📅"
-          label={t('dashboard.stats.learningDays')}
-          value={`${data.total_learning_days} ${t('dashboard.stats.days')}`}
+          label="Learning Days"
+          value={`${data.total_learning_days} days`}
           color="#3b82f6"
         />
         <StatCard
           icon="✅"
-          label={t('dashboard.stats.completionRate')}
+          label="Independent Completion Rate"
           value={`${data.independent_completion_rate}%`}
           color="#22c55e"
         />
         <StatCard
           icon="📊"
-          label={t('dashboard.stats.weeklyPractice')}
-          value={`${data.sessions_this_week} ${t('dashboard.stats.problems')}`}
+          label="Weekly Practice"
+          value={`${data.sessions_this_week} problems`}
           color="#8b5cf6"
         />
-        <StatCard icon="🔥" label={t('dashboard.stats.streak')} value={`${data.learning_streak} ${t('dashboard.stats.days')}`} color="#f59e0b" />
+        <StatCard
+          icon="🔥"
+          label="Learning Streak"
+          value={`${data.learning_streak} days`}
+          color="#f59e0b"
+        />
       </div>
 
       {goalData && <GoalProgress data={goalData} />}
 
-      {trendData && trendData.daily_stats.length > 0 && (
-        <TrendChart data={trendData.daily_stats} />
+      {data.recent_sessions.length > 0 && data.recent_sessions[0] && (
+        <SessionSummary sessionId={data.recent_sessions[0].session_id} />
       )}
+
+      {trendData && trendData.daily_stats.length > 0 && <TrendChart data={trendData.daily_stats} />}
 
       {data.problem_type_stats.length > 0 && (
         <div
@@ -163,6 +179,7 @@ export function Dashboard({ onBack }: DashboardProps) {
       )}
 
       <div
+        data-testid="dashboard-recent-sessions"
         style={{
           backgroundColor: 'white',
           borderRadius: '12px',
@@ -178,8 +195,8 @@ export function Dashboard({ onBack }: DashboardProps) {
             color: '#374151',
           }}
         >
-            📜 {t('dashboard.recentSessions')}
-          </div>
+          📜 Recent Practice
+        </div>
         <SessionHistoryList sessions={data.recent_sessions} />
       </div>
     </div>

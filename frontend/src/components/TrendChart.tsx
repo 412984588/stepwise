@@ -1,19 +1,18 @@
-import { DailyStats } from '../services/sessionApi';
-import { useTranslation } from '../i18n';
+import { DailyStats } from '../services/sessionApi'
 
 interface TrendChartProps {
-  data: DailyStats[];
+  data: DailyStats[]
 }
 
 export function TrendChart({ data }: TrendChartProps) {
-  const { t } = useTranslation();
-  const maxTotal = Math.max(...data.map((d) => d.total), 1);
-  const chartHeight = 120;
-  const chartWidth = 280;
-  const barWidth = (chartWidth - 20) / data.length - 4;
+  const maxTotal = Math.max(...data.map((d) => d.total), 1)
+  const chartHeight = 120
+  const chartWidth = 280
+  const barWidth = (chartWidth - 20) / data.length - 4
 
   return (
     <div
+      data-testid="dashboard-trend"
       style={{
         backgroundColor: 'white',
         borderRadius: '12px',
@@ -30,16 +29,16 @@ export function TrendChart({ data }: TrendChartProps) {
           marginBottom: '16px',
         }}
       >
-        <span style={{ fontWeight: 600, color: '#374151' }}>📈 {t('dashboard.trendChart.title')}</span>
-        <span style={{ fontSize: '12px', color: '#9ca3af' }}>{t('dashboard.trendChart.subtitle')}</span>
+        <span style={{ fontWeight: 600, color: '#374151' }}>📈 Practice Trend</span>
+        <span style={{ fontSize: '12px', color: '#9ca3af' }}>Last 7 days</span>
       </div>
 
       <svg width="100%" viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`}>
         {data.map((day, i) => {
-          const barHeight = (day.total / maxTotal) * chartHeight;
-          const completedHeight = (day.completed / maxTotal) * chartHeight;
-          const x = 10 + i * (barWidth + 4);
-          const dayLabel = new Date(day.date).toLocaleDateString('zh-CN', { weekday: 'short' });
+          const barHeight = (day.total / maxTotal) * chartHeight
+          const completedHeight = (day.completed / maxTotal) * chartHeight
+          const x = 10 + i * (barWidth + 4)
+          const dayLabel = new Date(day.date).toLocaleDateString('zh-CN', { weekday: 'short' })
 
           return (
             <g key={day.date}>
@@ -80,7 +79,7 @@ export function TrendChart({ data }: TrendChartProps) {
                 {dayLabel}
               </text>
             </g>
-          );
+          )
         })}
       </svg>
 
@@ -102,7 +101,7 @@ export function TrendChart({ data }: TrendChartProps) {
               borderRadius: '2px',
             }}
           />
-          <span style={{ color: '#6b7280' }}>{t('dashboard.trendChart.independent')}</span>
+          <span style={{ color: '#6b7280' }}>Independent</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div
@@ -113,9 +112,9 @@ export function TrendChart({ data }: TrendChartProps) {
               borderRadius: '2px',
             }}
           />
-          <span style={{ color: '#6b7280' }}>{t('dashboard.trendChart.total')}</span>
+          <span style={{ color: '#6b7280' }}>Total Practice</span>
         </div>
       </div>
     </div>
-  );
+  )
 }

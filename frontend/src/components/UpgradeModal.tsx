@@ -34,20 +34,12 @@ const plans: PlanInfo[] = [
   {
     tier: 'family',
     price: '$19.99',
-    features: [
-      'billing.features.everythingPro',
-      'billing.features.fiveProfiles',
-    ],
+    features: ['billing.features.everythingPro', 'billing.features.fiveProfiles'],
     color: '#7c3aed',
   },
 ]
 
-export function UpgradeModal({
-  isOpen,
-  onClose,
-  onSelectTier,
-  currentTier,
-}: UpgradeModalProps) {
+export function UpgradeModal({ isOpen, onClose, onSelectTier, currentTier }: UpgradeModalProps) {
   const { t } = useTranslation()
 
   if (!isOpen) return null

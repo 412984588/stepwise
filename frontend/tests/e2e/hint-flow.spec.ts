@@ -139,20 +139,27 @@ test.describe('Layer Progression - User Story 2', () => {
   })
 
   test('full layer progression from CONCEPT to COMPLETED', async ({ page }) => {
-    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I need to use transposition to move the constant')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
 
-    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I understand, first transpose then combine like terms')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
-    await page.getByLabel('Write your thoughts').fill('Following the steps, move 5 to the right side')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('Following the steps, move 5 to the right side')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Completed')
   })
 })
 
+// Dashboard Flow - User Story 4
 test.describe('Dashboard Flow - User Story 4', () => {
   test('can navigate to dashboard from main page', async ({ page }) => {
     await page.goto('/')
@@ -209,7 +216,7 @@ test.describe('Dashboard Flow - User Story 4', () => {
     await page.getByRole('button', { name: 'View Learning Stats' }).click()
 
     await expect(page.getByText('Recent Practice')).toBeVisible()
-    await expect(page.getByText('5x = 25')).toBeVisible()
+    await expect(page.getByText('5x = 25').first()).toBeVisible()
   })
 })
 
@@ -233,11 +240,15 @@ test.describe('Reveal Solution Flow - User Story 3', () => {
   })
 
   test('reveal button becomes enabled after reaching STEP layer', async ({ page }) => {
-    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I need to use transposition to move the constant')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
 
-    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I understand, first transpose then combine like terms')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
@@ -246,11 +257,15 @@ test.describe('Reveal Solution Flow - User Story 3', () => {
   })
 
   test('I solved it button becomes enabled at STEP layer', async ({ page }) => {
-    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I need to use transposition to move the constant')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Strategy Hint')
 
-    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I understand, first transpose then combine like terms')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
@@ -259,9 +274,13 @@ test.describe('Reveal Solution Flow - User Story 3', () => {
   })
 
   test('clicking reveal shows solution viewer', async ({ page }) => {
-    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I need to use transposition to move the constant')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
-    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I understand, first transpose then combine like terms')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 
@@ -273,9 +292,13 @@ test.describe('Reveal Solution Flow - User Story 3', () => {
   })
 
   test('clicking I solved it returns to problem input', async ({ page }) => {
-    await page.getByLabel('Write your thoughts').fill('I need to use transposition to move the constant')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I need to use transposition to move the constant')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
-    await page.getByLabel('Write your thoughts').fill('I understand, first transpose then combine like terms')
+    await page
+      .getByLabel('Write your thoughts')
+      .fill('I understand, first transpose then combine like terms')
     await page.getByRole('button', { name: 'Submit Answer' }).click()
     await expect(page.locator('#hint-layer-label')).toHaveText('Step Hint')
 

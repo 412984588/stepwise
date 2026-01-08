@@ -1,6 +1,5 @@
 import re
-import uuid
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status, Body
 from sqlalchemy.orm import Session
 
 from backend.database.engine import get_db
@@ -16,21 +15,20 @@ from backend.models import (
 )
 from backend.schemas.problem import StartSessionRequest, StartSessionResponse, SessionResponse
 from backend.schemas.response import RespondRequest, RespondResponse
+from backend.schemas.solution import CompleteRequest, CompleteResponse
 from backend.schemas.errors import ErrorResponse
 from backend.services.problem_classifier import ProblemClassifier
 from backend.services.hint_generator import HintGenerator
 from backend.services.understanding_evaluator import UnderstandingEvaluator
 from backend.services.session_manager import SessionManager
+from backend.services.event_logger import EventLogger
 from backend.services import entitlements
 from backend.i18n import get_message, Locale
+from backend.utils.validation import generate_session_id, validate_session_id
 
 MIN_RESPONSE_LENGTH = 10
 
 router = APIRouter()
-
-
-def generate_session_id() -> str:
-    return f"ses_{uuid.uuid4().hex[:8]}"
 
 
 def is_math_problem(text: str) -> bool:
@@ -113,6 +111,7 @@ async def start_session(
         problem_id=problem.id,
         current_layer=HintLayer.CONCEPT,
         status=SessionStatus.ACTIVE,
+        session_access_token=HintSession.generate_access_token(),
     )
     db.add(hint_session)
     db.flush()
@@ -134,6 +133,12 @@ async def start_session(
         is_downgrade=False,
     )
     db.add(hint_content)
+
+    # Log events
+    event_logger = EventLogger()
+    event_logger.log_event(db, session_id, "session_started", {"problem_type": problem_type.value})
+    event_logger.log_event(db, session_id, "concept_hint_given", {"sequence": 1})
+
     db.commit()
 
     if user_id:
@@ -141,6 +146,7 @@ async def start_session(
 
     return StartSessionResponse(
         session_id=session_id,
+        session_access_token=hint_session.session_access_token,
         problem_type=problem_type.value.upper(),
         topic=problem.topic.value if problem.topic else None,
         current_layer=HintLayer.CONCEPT.value.upper(),
@@ -158,6 +164,9 @@ async def get_session(
     session_id: str,
     db: Session = Depends(get_db),
 ) -> SessionResponse:
+    # Validate session_id format
+    validate_session_id(session_id)
+
     hint_session = db.query(HintSession).filter(HintSession.id == session_id).first()
 
     if not hint_session:
@@ -221,6 +230,9 @@ async def respond_to_hint(
     request: RespondRequest,
     db: Session = Depends(get_db),
 ) -> RespondResponse:
+    # Validate session_id format
+    validate_session_id(session_id)
+
     hint_session = db.query(HintSession).filter(HintSession.id == session_id).first()
 
     if not hint_session:
@@ -274,6 +286,7 @@ async def respond_to_hint(
     )
 
     previous_layer = hint_session.current_layer.value.upper()
+    previous_layer_enum = hint_session.current_layer
 
     if transition.reset_confusion:
         hint_session.confusion_count = 0
@@ -315,6 +328,33 @@ async def respond_to_hint(
         is_downgrade=transition.is_downgrade,
     )
     db.add(hint_content)
+
+    # Log events
+    event_logger = EventLogger()
+
+    # Log hint given event
+    if transition.new_layer == HintLayer.STRATEGY or (
+        transition.should_advance and previous_layer_enum == HintLayer.CONCEPT
+    ):
+        event_logger.log_event(
+            db, session_id, "strategy_hint_given", {"sequence": new_hint.sequence}
+        )
+    elif transition.new_layer == HintLayer.STEP or (
+        transition.should_advance and previous_layer_enum == HintLayer.STRATEGY
+    ):
+        event_logger.log_event(db, session_id, "step_hint_given", {"sequence": new_hint.sequence})
+    elif previous_layer_enum == HintLayer.CONCEPT and not transition.should_advance:
+        event_logger.log_event(
+            db, session_id, "concept_hint_given", {"sequence": new_hint.sequence}
+        )
+
+    # Log layer advancement events
+    if transition.should_advance:
+        if transition.new_layer == HintLayer.STRATEGY:
+            event_logger.log_event(db, session_id, "reached_strategy_layer", {})
+        elif transition.new_layer == HintLayer.STEP:
+            event_logger.log_event(db, session_id, "reached_step_layer", {})
+
     db.commit()
 
     can_reveal = session_manager.can_reveal_solution(
@@ -350,6 +390,9 @@ async def reveal_solution(
     from backend.schemas.solution import RevealResponse
     from backend.services.solution_generator import SolutionGenerator
     from backend.models.solution import FullSolution
+
+    # Validate session_id format
+    validate_session_id(session_id)
 
     hint_session = db.query(HintSession).filter(HintSession.id == session_id).first()
 
@@ -391,6 +434,11 @@ async def reveal_solution(
     hint_session.current_layer = HintLayer.REVEALED
     hint_session.used_full_solution = True
     hint_session.touch()
+
+    # Log reveal event
+    event_logger = EventLogger()
+    event_logger.log_event(db, session_id, "reveal_used", {})
+
     db.commit()
 
     return RevealResponse(
@@ -404,17 +452,25 @@ async def reveal_solution(
 
 @router.post(
     "/{session_id}/complete",
+    response_model=CompleteResponse,
     responses={
-        200: {"description": "Session completed successfully"},
         400: {"model": ErrorResponse},
         404: {"model": ErrorResponse},
     },
 )
 async def complete_session(
     session_id: str,
+    request: CompleteRequest | None = Body(default=None),
     db: Session = Depends(get_db),
-) -> dict:
-    from backend.schemas.solution import CompleteResponse
+) -> CompleteResponse:
+    from backend.services.email_service import get_email_service
+    from backend.services.learning_summary import LearningSummaryGenerator
+    import io
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas as pdf_canvas
+
+    # Validate session_id format
+    validate_session_id(session_id)
 
     hint_session = db.query(HintSession).filter(HintSession.id == session_id).first()
 
@@ -437,10 +493,93 @@ async def complete_session(
     hint_session.status = SessionStatus.COMPLETED
     hint_session.current_layer = HintLayer.COMPLETED
     hint_session.touch()
+
+    if request and request.email:
+        hint_session.parent_email = request.email
+
+    # Log completion event
+    event_logger = EventLogger()
+    event_logger.log_event(db, session_id, "session_completed", {})
+
     db.commit()
+
+    # Send email report if email provided
+    email_sent = False
+    if request and request.email:
+        try:
+            # Generate learning summary
+            summary_generator = LearningSummaryGenerator()
+            summary = summary_generator.generate_session_summary(db, session_id)
+
+            # Generate PDF report (simplified version)
+            buffer = io.BytesIO()
+            p = pdf_canvas.Canvas(buffer, pagesize=letter)
+            width, height = letter
+
+            p.setFont("Helvetica-Bold", 20)
+            p.drawString(50, height - 50, "StepWise Session Report")
+            p.setFont("Helvetica", 12)
+            p.drawString(50, height - 80, f"Session ID: {session_id}")
+            p.drawString(50, height - 100, f"Performance: {summary['performance_level']}")
+
+            p.showPage()
+            p.save()
+            pdf_content = buffer.getvalue()
+            buffer.close()
+
+            # Send email
+            email_service = get_email_service()
+            email_sent = email_service.send_learning_report(
+                recipient_email=request.email,
+                session_id=session_id,
+                summary=summary,
+                pdf_content=pdf_content,
+            )
+        except Exception as e:
+            # Log error but don't fail the completion
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to send email report: {e}", exc_info=True)
+            email_sent = False
 
     return CompleteResponse(
         session_id=session_id,
         status="COMPLETED",
         message=get_message("COMPLETE_SUCCESS"),
-    ).model_dump()
+        email_sent=email_sent,
+    )
+
+
+@router.post(
+    "/{session_id}/events",
+    responses={
+        200: {"description": "Event logged successfully"},
+        404: {"model": ErrorResponse},
+    },
+)
+async def log_event(
+    session_id: str,
+    request: dict,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Log a custom event for analytics (frontend fire-and-forget calls)."""
+    # Validate session_id format
+    validate_session_id(session_id)
+
+    hint_session = db.query(HintSession).filter(HintSession.id == session_id).first()
+
+    if not hint_session:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "SESSION_NOT_FOUND", "message": get_message("SESSION_NOT_FOUND")},
+        )
+
+    event_type = request.get("event_type", "custom_event")
+    details = request.get("details")
+
+    event_logger = EventLogger()
+    event_logger.log_event(db, session_id, event_type, details)
+    db.commit()
+
+    return {"status": "ok", "event_type": event_type}

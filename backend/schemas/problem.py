@@ -10,6 +10,7 @@ class StartSessionRequest(BaseModel):
 
 class StartSessionResponse(BaseModel):
     session_id: str
+    session_access_token: str
     problem_type: str
     topic: str | None = None
     current_layer: str

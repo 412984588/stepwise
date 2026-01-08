@@ -51,11 +51,19 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET', headers: options?.headers })
   }
 
-  post<T>(endpoint: string, body: unknown, options?: { headers?: Record<string, string> }): Promise<T> {
+  post<T>(
+    endpoint: string,
+    body: unknown,
+    options?: { headers?: Record<string, string> }
+  ): Promise<T> {
     return this.request<T>(endpoint, { method: 'POST', body, headers: options?.headers })
   }
 
-  put<T>(endpoint: string, body: unknown, options?: { headers?: Record<string, string> }): Promise<T> {
+  put<T>(
+    endpoint: string,
+    body: unknown,
+    options?: { headers?: Record<string, string> }
+  ): Promise<T> {
     return this.request<T>(endpoint, { method: 'PUT', body, headers: options?.headers })
   }
 

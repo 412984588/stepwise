@@ -31,7 +31,12 @@
     "revealButton": "显示解答",
     "completeButton": "我做出来了！",
     "downgradeMessage": "让我换个角度来帮你理解这个概念！",
-    "confusionMessage": "没关系，再想想看！"
+    "confusionMessage": "没关系，再想想看！",
+    "emailLabel": "发送学习报告到邮箱（可选）",
+    "emailPlaceholder": "parent@example.com",
+    "emailInvalid": "请输入有效的邮箱地址",
+    "emailSent": "学习报告已发送到您的邮箱！",
+    "emailFailed": "邮件发送失败，但您的学习记录已保存。"
   },
   "solutionViewer": {
     "title": "完整解答",

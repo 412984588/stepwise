@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.utils.validation import is_valid_uuid_v4
+
 
 class TestStartSessionSuccess:
     @pytest.mark.contract
@@ -15,7 +17,7 @@ class TestStartSessionSuccess:
 
     @pytest.mark.contract
     def test_start_session_returns_session_id(self, client: TestClient) -> None:
-        """Response contains session_id."""
+        """Response contains session_id in UUID v4 format."""
         response = client.post(
             "/api/v1/sessions/start",
             json={"problem_text": "3x + 5 = 14"},
@@ -23,7 +25,7 @@ class TestStartSessionSuccess:
 
         data = response.json()
         assert "session_id" in data
-        assert data["session_id"].startswith("ses_")
+        assert is_valid_uuid_v4(data["session_id"])
 
     @pytest.mark.contract
     def test_start_session_returns_problem_type(self, client: TestClient) -> None:

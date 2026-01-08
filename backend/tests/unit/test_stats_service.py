@@ -132,6 +132,7 @@ class TestSessionsList:
         mock_db = MagicMock()
         mock_session1 = MagicMock()
         mock_session1.id = "ses_001"
+        mock_session1.session_access_token = "token_001"
         mock_session1.started_at = datetime(2024, 1, 2, tzinfo=timezone.utc)
         mock_session1.status = SessionStatus.COMPLETED
         mock_session1.current_layer = HintLayer.COMPLETED
@@ -139,6 +140,7 @@ class TestSessionsList:
 
         mock_session2 = MagicMock()
         mock_session2.id = "ses_002"
+        mock_session2.session_access_token = "token_002"
         mock_session2.started_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
         mock_session2.status = SessionStatus.ACTIVE
         mock_session2.current_layer = HintLayer.STRATEGY
@@ -161,6 +163,7 @@ class TestSessionsList:
         mock_db = MagicMock()
         mock_session = MagicMock()
         mock_session.id = "ses_test"
+        mock_session.session_access_token = "token_test"
         mock_session.started_at = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         mock_session.completed_at = datetime(2024, 1, 1, 12, 30, 0, tzinfo=timezone.utc)
         mock_session.status = SessionStatus.COMPLETED

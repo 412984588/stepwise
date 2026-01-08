@@ -19,6 +19,7 @@ class StatsSummary(BaseModel):
 
 class SessionListItem(BaseModel):
     session_id: str
+    session_access_token: str
     problem_text: str
     status: SessionStatus
     final_layer: HintLayer

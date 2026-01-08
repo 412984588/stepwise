@@ -31,7 +31,12 @@
     "revealButton": "Show Solution",
     "completeButton": "I solved it!",
     "downgradeMessage": "Let me help you understand this concept from a different angle!",
-    "confusionMessage": "That's okay, let's think about it some more!"
+    "confusionMessage": "That's okay, let's think about it some more!",
+    "emailLabel": "Send learning report to email (optional)",
+    "emailPlaceholder": "parent@example.com",
+    "emailInvalid": "Please enter a valid email address",
+    "emailSent": "Learning report has been sent to your email!",
+    "emailFailed": "We couldn't send the email, but your session was saved."
   },
   "solutionViewer": {
     "title": "Complete Solution",

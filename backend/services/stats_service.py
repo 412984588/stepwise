@@ -85,6 +85,7 @@ class StatsService:
         return [
             SessionListItem(
                 session_id=session.id,
+                session_access_token=session.session_access_token or "",
                 problem_text=session.problem.raw_text,
                 status=session.status,
                 final_layer=session.current_layer,

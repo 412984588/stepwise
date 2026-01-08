@@ -45,22 +45,30 @@ export async function createCheckout(
   successUrl: string,
   cancelUrl: string
 ): Promise<string> {
-  const response = await apiClient.post<CheckoutResponse>('/billing/checkout', {
-    tier,
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-  }, {
-    headers: { 'X-User-ID': userId },
-  })
+  const response = await apiClient.post<CheckoutResponse>(
+    '/billing/checkout',
+    {
+      tier,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    },
+    {
+      headers: { 'X-User-ID': userId },
+    }
+  )
   return response.url
 }
 
 export async function createPortal(userId: string, returnUrl: string): Promise<string> {
-  const response = await apiClient.post<PortalResponse>('/billing/portal', {
-    return_url: returnUrl,
-  }, {
-    headers: { 'X-User-ID': userId },
-  })
+  const response = await apiClient.post<PortalResponse>(
+    '/billing/portal',
+    {
+      return_url: returnUrl,
+    },
+    {
+      headers: { 'X-User-ID': userId },
+    }
+  )
   return response.url
 }
 
