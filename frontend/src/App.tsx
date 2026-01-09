@@ -5,6 +5,7 @@ import { ErrorMessage } from './components/ErrorMessage'
 import { SuccessMessage } from './components/SuccessMessage'
 import { SolutionViewer } from './components/SolutionViewer'
 import { Dashboard } from './components/Dashboard'
+import { FeedbackDashboard } from './components/FeedbackDashboard'
 import { GradeSelector, GradeLevel } from './components/GradeSelector'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
 import { UpgradeModal } from './components/UpgradeModal'
@@ -22,7 +23,7 @@ import { HintLayer } from './types/enums'
 import { useTranslation } from './i18n'
 import { useUserId } from './hooks/useUserId'
 
-type AppView = 'main' | 'dashboard'
+type AppView = 'main' | 'dashboard' | 'feedback-dashboard'
 
 interface SessionState {
   sessionId: string
@@ -251,6 +252,8 @@ function App() {
 
         {view === 'dashboard' ? (
           <Dashboard onBack={() => setView('main')} />
+        ) : view === 'feedback-dashboard' ? (
+          <FeedbackDashboard onBack={() => setView('main')} />
         ) : solution ? (
           <SolutionViewer
             steps={solution.steps}
@@ -285,6 +288,23 @@ function App() {
               }}
             >
               📊 View Learning Stats
+            </button>
+            <button
+              data-testid="nav-feedback-dashboard"
+              onClick={() => setView('feedback-dashboard')}
+              style={{
+                width: '100%',
+                marginTop: '8px',
+                padding: '10px 16px',
+                fontSize: '14px',
+                color: '#6b7280',
+                backgroundColor: '#f3f4f6',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              📈 Feedback Analytics
             </button>
           </div>
         ) : (
