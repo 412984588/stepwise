@@ -8,6 +8,7 @@ import { Dashboard } from './components/Dashboard'
 import { GradeSelector, GradeLevel } from './components/GradeSelector'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
 import { UpgradeModal } from './components/UpgradeModal'
+import { FeedbackModal } from './components/FeedbackModal'
 import {
   startSession,
   submitResponse,
@@ -52,6 +53,7 @@ function App() {
   const [gradeLevel, setGradeLevel] = useState<GradeLevel | null>(null)
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -310,6 +312,22 @@ function App() {
           }}
         >
           <p>{t('app.footer')}</p>
+          <button
+            data-testid="nav-feedback"
+            onClick={() => setShowFeedbackModal(true)}
+            style={{
+              marginTop: '8px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              color: '#6b7280',
+              backgroundColor: 'transparent',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            💬 Feedback
+          </button>
         </footer>
       </div>
 
@@ -318,6 +336,12 @@ function App() {
         onClose={() => setShowUpgradeModal(false)}
         onSelectTier={handleUpgrade}
         currentTier={subscription?.tier ?? 'free'}
+      />
+
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onSuccess={() => setSuccessMessage('Thank you for your feedback!')}
       />
     </div>
   )

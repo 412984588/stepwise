@@ -17,9 +17,11 @@ from backend.api.stats import router as stats_router
 from backend.api.billing import router as billing_router
 from backend.api.reports import router as reports_router
 from backend.api.email import router as email_router
+from backend.api.feedback import router as feedback_router
 
 api_router.include_router(sessions_router, prefix="/sessions", tags=["sessions"])
 api_router.include_router(stats_router)
 api_router.include_router(billing_router, prefix="/billing", tags=["billing"])
 api_router.include_router(reports_router, prefix="/reports", tags=["reports"])
 api_router.include_router(email_router)
+api_router.include_router(feedback_router)

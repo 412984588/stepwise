@@ -1,29 +1,59 @@
 # StepWise - Socratic Math Tutoring System
 
-A layered hint system for math education that guides students through problem-solving using Socratic questioning.
+> **🇺🇸 US Private Beta** | [Join the Beta](./docs/US_PRIVATE_BETA.md) | [Release v0.1.1](https://github.com/your-org/StepWise/releases/tag/v0.1.1)
+
+## What is StepWise?
+
+StepWise is a Socratic-style math tutoring system designed for **US families with students in Grades 4–9**. Instead of giving away answers, StepWise guides students through problem-solving with layered hints—starting with conceptual guidance, then strategic approaches, and finally step-by-step help if needed.
+
+**For Parents**: Receive session reports after each learning session and weekly digests summarizing your child's progress. No accounts required—just provide your email to receive reports.
 
 ## Features
 
 - **Layered Hints**: Concept → Strategy → Step progression
-- **Subscription Tiers**: Free (3 problems/day), Pro ($9.99/mo), Family ($19.99/mo)
-- **Stripe Billing**: Full payment and subscription management
-- **Internationalization**: English (en-US) and Chinese (zh-CN) support
+- **Progress Dashboard**: Track learning stats and trends
+- **Email Reports**: Session summaries and weekly digests to parents
 - **Grade-based Content**: Grades 4-9 math problems
-
-## Tech Stack
-
-- **Backend**: Python 3.11 + FastAPI + SQLAlchemy + SQLite
-- **Frontend**: TypeScript 5.x + React 18 + Vite
-- **Payments**: Stripe API
-- **Testing**: pytest (backend), Playwright (frontend E2E)
+- **Privacy-first**: Children's data minimized; no accounts required
 
 ## Quick Start
+
+The fastest way to run StepWise locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/StepWise.git
+cd StepWise
+
+# Start both backend and frontend
+./scripts/dev_up.sh
+
+# Open http://localhost:3000 in your browser
+
+# When done, stop the servers
+./scripts/dev_down.sh
+```
 
 ### Prerequisites
 
 - Python 3.11+
 - Node.js 18+
-- Stripe account (for production)
+
+## Documentation
+
+- **[US Private Beta Guide](./docs/US_PRIVATE_BETA.md)** - For beta testers: what StepWise does, how to run it, privacy info
+- **[Privacy Policy](./docs/PRIVACY_POLICY.md)** - How we handle data (COPPA-compliant)
+- **[Terms of Service](./docs/TERMS_OF_SERVICE.md)** - Usage terms
+- **[Production Runbook](./docs/PRODUCTION_RUNBOOK.md)** - Deployment and operations guide
+- **[Release Notes](./docs/RELEASE_NOTES.md)** - What's new in each release
+
+## Tech Stack
+
+- **Backend**: Python 3.11 + FastAPI + SQLAlchemy + SQLite
+- **Frontend**: TypeScript 5.x + React 18 + Vite
+- **Testing**: pytest (backend), Playwright (frontend E2E)
+
+## Detailed Setup
 
 ### Backend Setup
 
@@ -38,10 +68,6 @@ cp .env.example .env
 
 # Edit .env and add your keys:
 # - OPENAI_API_KEY (required for hint generation)
-# - STRIPE_SECRET_KEY (for billing, use test keys for development)
-# - STRIPE_WEBHOOK_SECRET (for webhook verification)
-# - STRIPE_PRO_PRICE_ID (Stripe price ID for Pro tier)
-# - STRIPE_FAMILY_PRICE_ID (Stripe price ID for Family tier)
 
 # Run tests
 pytest tests/ -v
@@ -64,19 +90,23 @@ npm install
 npm run dev
 ```
 
-Frontend will be available at `http://localhost:3001` (or next available port)
+Frontend will be available at `http://localhost:3000`
 
 ### Testing the Full Flow
 
-1. **Open the frontend** at `http://localhost:3001`
-2. **Enter a math problem** (e.g., "Solve 2x + 5 = 11")
-3. **Interact with hints** - try "明白了" (understood) or "不懂" (confused)
-4. **Test the free tier limit**:
-   - Create 3 sessions (free tier limit)
-   - On the 4th attempt, you should see the upgrade modal
-5. **Test subscription UI**:
-   - Click "Upgrade" to see pricing tiers
-   - Subscription banner shows current tier and usage
+1. **Open the frontend** at `http://localhost:3000`
+2. **Select your child's grade level**
+3. **Enter a math problem** (e.g., "Solve 2x + 5 = 11")
+4. **Follow the hints** - respond with your understanding
+5. **Provide your email** (optional) to receive a learning report
+
+## Feedback
+
+We'd love to hear from you! Use the **Feedback** button in the app or see our [Feedback Form Spec](./docs/US_BETA_FEEDBACK.md).
+
+## License
+
+MIT
 
 ## Project Structure
 
