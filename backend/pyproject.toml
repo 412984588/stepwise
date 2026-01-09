@@ -23,6 +23,8 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
     "stripe>=7.0.0",
+    "reportlab>=4.0.0",
+    "alembic>=1.13.0",
 ]
 
 [project.optional-dependencies]
@@ -35,9 +37,8 @@ dev = [
     "mypy>=1.8.0",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["backend*", "api*", "models*", "schemas*", "services*", "database*", "data*", "templates*", "utils*", "scripts*"]
+[tool.setuptools]
+packages = ["backend", "backend.api", "backend.models", "backend.schemas", "backend.services", "backend.database", "backend.data", "backend.templates", "backend.utils", "backend.scripts", "backend.i18n"]
 
 [tool.ruff]
 line-length = 100
