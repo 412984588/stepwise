@@ -1,0 +1,33 @@
+# Backend Development Dockerfile for StepWise
+# Optimized for hot reload and rapid development
+
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory to project root
+WORKDIR /app
+
+# Copy only dependency files first (for better caching)
+COPY backend/pyproject.toml ./backend/
+
+# Install Python dependencies
+WORKDIR /app/backend
+RUN pip install --no-cache-dir -e ".[dev]"
+
+# Back to project root
+WORKDIR /app
+
+# Create data directory for SQLite
+RUN mkdir -p /data
+
+# Expose port
+EXPOSE 8000
+
+# Development mode: source code will be mounted as volume
+# uvicorn will be started with --reload flag via docker-compose command
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
