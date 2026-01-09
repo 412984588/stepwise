@@ -1,8 +1,14 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Feedback Modal Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
+  })
+
   test('should open feedback modal, submit feedback, and show success toast', async ({ page }) => {
-    // Navigate to the app
     await page.goto('/')
 
     // Click the feedback button in the footer

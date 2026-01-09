@@ -14,6 +14,53 @@ from backend.services.rate_limiter import RateLimiter
 logger = logging.getLogger(__name__)
 
 
+def verify_beta_code(x_beta_code: str | None = Header(None, alias="X-Beta-Code")) -> str | None:
+    """
+    Verify beta access code from request header.
+
+    If BETA_ACCESS_CODE env var is not set, gate is disabled (dev-friendly).
+    If set, the X-Beta-Code header must match.
+
+    Args:
+        x_beta_code: Beta code from X-Beta-Code header
+
+    Returns:
+        The verified beta code, or None if gate is disabled
+
+    Raises:
+        HTTPException: 403 if gate is enabled and code is missing/invalid
+    """
+    expected_code = os.getenv("BETA_ACCESS_CODE")
+
+    # If no beta code is configured, gate is disabled
+    if not expected_code:
+        return None
+
+    # Gate is enabled - code must be provided and match
+    if not x_beta_code:
+        logger.warning("Beta access denied: missing X-Beta-Code header")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": "BETA_CODE_REQUIRED",
+                "message": "Private beta access code is required. Please enter your beta code.",
+            },
+        )
+
+    if x_beta_code != expected_code:
+        logger.warning(f"Beta access denied: invalid code (got {x_beta_code[:4]}...)")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": "BETA_CODE_INVALID",
+                "message": "Invalid beta access code. Please check your code and try again.",
+            },
+        )
+
+    logger.info("Beta access granted")
+    return x_beta_code
+
+
 def verify_api_key(x_api_key: str | None = Header(None, alias="X-API-Key")) -> str:
     """
     Verify API access key from request header.

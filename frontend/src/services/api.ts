@@ -1,3 +1,5 @@
+import { getBetaCode } from '../hooks/useBetaCode'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 interface RequestOptions {
@@ -22,12 +24,19 @@ class ApiClient {
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const { method = 'GET', body, headers = {} } = options
 
+    // Include beta code header if available
+    const betaCode = getBetaCode()
+    const allHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...headers,
+    }
+    if (betaCode) {
+      allHeaders['X-Beta-Code'] = betaCode
+    }
+
     const config: RequestInit = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
+      headers: allHeaders,
     }
 
     if (body) {

@@ -10,6 +10,8 @@ import { GradeSelector, GradeLevel } from './components/GradeSelector'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
 import { UpgradeModal } from './components/UpgradeModal'
 import { FeedbackModal } from './components/FeedbackModal'
+import { OnboardingModal, OnboardingData } from './components/OnboardingModal'
+import { BetaGateModal } from './components/BetaGateModal'
 import {
   startSession,
   submitResponse,
@@ -17,11 +19,14 @@ import {
   completeSession,
   getErrorMessage,
   SolutionStep,
+  isApiError,
 } from './services/sessionApi'
 import { getSubscription, createCheckout, SubscriptionInfo } from './services/billingApi'
 import { HintLayer } from './types/enums'
-import { useTranslation } from './i18n'
+import { useTranslation, useI18n } from './i18n'
 import { useUserId } from './hooks/useUserId'
+import { useOnboarding } from './hooks/useOnboarding'
+import { useBetaCode } from './hooks/useBetaCode'
 
 type AppView = 'main' | 'dashboard' | 'feedback-dashboard'
 
@@ -44,17 +49,56 @@ interface SolutionState {
 
 function App() {
   const { t, locale } = useTranslation()
+  const { setLocale } = useI18n()
   const userId = useUserId()
+  const {
+    isCompleted: onboardingCompleted,
+    preferences,
+    savePreferences,
+    resetOnboarding,
+  } = useOnboarding()
+  const { setBetaCode, clearBetaCode, isValidated: hasBetaCode } = useBetaCode()
+  const [showOnboardingModal, setShowOnboardingModal] = useState(!onboardingCompleted)
+  const [showBetaGateModal, setShowBetaGateModal] = useState(!hasBetaCode)
+  const [betaGateError, setBetaGateError] = useState<string | null>(null)
+  const [betaGateLoading, setBetaGateLoading] = useState(false)
   const [view, setView] = useState<AppView>('main')
   const [session, setSession] = useState<SessionState | null>(null)
   const [solution, setSolution] = useState<SolutionState | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [gradeLevel, setGradeLevel] = useState<GradeLevel | null>(null)
+  const [gradeLevel, setGradeLevel] = useState<GradeLevel | null>(preferences.gradeLevel)
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+
+  const handleBetaCodeSubmit = useCallback(
+    async (code: string) => {
+      setBetaGateLoading(true)
+      setBetaGateError(null)
+
+      setBetaCode(code)
+
+      try {
+        await startSession('1+1=?', { locale, gradeLevel: 4, userId })
+        setShowBetaGateModal(false)
+      } catch (err) {
+        if (
+          isApiError(err) &&
+          (err.error === 'BETA_CODE_REQUIRED' || err.error === 'BETA_CODE_INVALID')
+        ) {
+          clearBetaCode()
+          setBetaGateError('Invalid beta access code. Please check your code and try again.')
+        } else {
+          setShowBetaGateModal(false)
+        }
+      } finally {
+        setBetaGateLoading(false)
+      }
+    },
+    [locale, userId, setBetaCode, clearBetaCode]
+  )
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -72,6 +116,22 @@ function App() {
     }
     loadSubscription()
   }, [userId])
+
+  const handleBetaCodeError = useCallback(
+    (err: unknown) => {
+      if (
+        isApiError(err) &&
+        (err.error === 'BETA_CODE_REQUIRED' || err.error === 'BETA_CODE_INVALID')
+      ) {
+        clearBetaCode()
+        setShowBetaGateModal(true)
+        setBetaGateError('Your beta access code is invalid or expired. Please enter a valid code.')
+        return true
+      }
+      return false
+    },
+    [clearBetaCode]
+  )
 
   const handleStartSession = async (problemText: string) => {
     setIsLoading(true)
@@ -96,7 +156,9 @@ function App() {
         canReveal: false,
       })
     } catch (err) {
-      setError(getErrorMessage(err))
+      if (!handleBetaCodeError(err)) {
+        setError(getErrorMessage(err))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -119,7 +181,9 @@ function App() {
         canReveal: response.can_reveal_solution,
       })
     } catch (err) {
-      setError(getErrorMessage(err))
+      if (!handleBetaCodeError(err)) {
+        setError(getErrorMessage(err))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -140,7 +204,9 @@ function App() {
       })
       setSession(null)
     } catch (err) {
-      setError(getErrorMessage(err))
+      if (!handleBetaCodeError(err)) {
+        setError(getErrorMessage(err))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -163,7 +229,9 @@ function App() {
         setError(t('hintDialog.emailFailed'))
       }
     } catch (err) {
-      setError(getErrorMessage(err))
+      if (!handleBetaCodeError(err)) {
+        setError(getErrorMessage(err))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -205,6 +273,18 @@ function App() {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [refreshSubscription])
+
+  const handleOnboardingComplete = (data: OnboardingData) => {
+    savePreferences(data)
+    setGradeLevel(data.gradeLevel)
+    setLocale(data.locale)
+    setShowOnboardingModal(false)
+  }
+
+  const handleOpenSettings = () => {
+    resetOnboarding()
+    setShowOnboardingModal(true)
+  }
 
   return (
     <div
@@ -320,6 +400,7 @@ function App() {
             confusionCount={session.confusionCount}
             isDowngrade={session.isDowngrade}
             canReveal={session.canReveal}
+            defaultEmail={preferences.optInSessionReports ? preferences.parentEmail : ''}
           />
         )}
 
@@ -332,22 +413,38 @@ function App() {
           }}
         >
           <p>{t('app.footer')}</p>
-          <button
-            data-testid="nav-feedback"
-            onClick={() => setShowFeedbackModal(true)}
-            style={{
-              marginTop: '8px',
-              padding: '6px 12px',
-              fontSize: '12px',
-              color: '#6b7280',
-              backgroundColor: 'transparent',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
-          >
-            💬 Feedback
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
+            <button
+              data-testid="nav-feedback"
+              onClick={() => setShowFeedbackModal(true)}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                color: '#6b7280',
+                backgroundColor: 'transparent',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              💬 Feedback
+            </button>
+            <button
+              data-testid="nav-settings"
+              onClick={handleOpenSettings}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                color: '#6b7280',
+                backgroundColor: 'transparent',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              ⚙️ {t('onboarding.settingsButton')}
+            </button>
+          </div>
         </footer>
       </div>
 
@@ -362,6 +459,19 @@ function App() {
         isOpen={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
         onSuccess={() => setSuccessMessage('Thank you for your feedback!')}
+      />
+
+      <OnboardingModal
+        isOpen={showOnboardingModal && !showBetaGateModal}
+        onComplete={handleOnboardingComplete}
+        initialData={preferences}
+      />
+
+      <BetaGateModal
+        isOpen={showBetaGateModal}
+        onSubmit={handleBetaCodeSubmit}
+        error={betaGateError}
+        isLoading={betaGateLoading}
       />
     </div>
   )

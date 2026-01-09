@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Email Reports - Completion with Email', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
     await page.goto('/')
     await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
     await page.getByRole('button', { name: 'Start Solving' }).click()

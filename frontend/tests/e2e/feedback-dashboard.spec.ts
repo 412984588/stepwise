@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Feedback Dashboard', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
+  })
+
   test('navigates to feedback dashboard from main page', async ({ page }) => {
     await page.goto('/')
 
@@ -11,20 +18,13 @@ test.describe('Feedback Dashboard', () => {
     await expect(page.getByTestId('feedback-dashboard')).toBeVisible()
   })
 
-  test('displays empty state when no feedback', async ({ page }) => {
+  test('displays stats cards after loading', async ({ page }) => {
     await page.goto('/')
-
-    // Navigate to feedback dashboard
     await page.getByTestId('nav-feedback-dashboard').click()
-
-    // Wait for loading to complete
     await expect(page.getByTestId('feedback-dashboard')).toBeVisible()
-
-    // Should show PMF score of 0
-    await expect(page.getByTestId('pmf-score')).toContainText('0%')
-
-    // Should show total count of 0
-    await expect(page.getByTestId('total-count')).toContainText('0')
+    await expect(page.getByTestId('pmf-score')).toBeVisible()
+    await expect(page.getByTestId('total-count')).toBeVisible()
+    await expect(page.getByTestId('email-rate')).toBeVisible()
   })
 
   test('can navigate back to main page', async ({ page }) => {

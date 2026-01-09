@@ -123,5 +123,36 @@
       "everythingPro": "Everything in Pro",
       "fiveProfiles": "Up to 5 student profiles"
     }
+  },
+  "localeSelector": {
+    "label": "Language"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to StepWise!",
+      "subtitle": "Your Socratic math coach for grades 4-9"
+    },
+    "features": {
+      "hints": "Guided hints (Concept → Strategy → Step)",
+      "reports": "PDF learning report after completion",
+      "digest": "Weekly digest (optional)"
+    },
+    "preferences": {
+      "title": "Your Preferences"
+    },
+    "email": {
+      "title": "Parent Email (Optional)",
+      "label": "Email address",
+      "placeholder": "parent@example.com",
+      "sessionReports": "Send session reports to this email",
+      "weeklyDigest": "Send weekly digest to this email"
+    },
+    "emailInvalid": "Please enter a valid email address",
+    "legal": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "continueButton": "Get Started",
+    "settingsButton": "Settings"
   }
 }

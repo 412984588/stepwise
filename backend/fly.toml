@@ -1,0 +1,39 @@
+# Fly.io configuration for StepWise Backend
+# Deploy: cd backend && fly deploy --app stepwise-backend-staging
+
+app = "stepwise-backend-staging"
+primary_region = "sjc"
+
+[build]
+
+[env]
+  EMAIL_PROVIDER = "console"
+  LOG_LEVEL = "INFO"
+  # BETA_ACCESS_CODE set via: fly secrets set BETA_ACCESS_CODE=your-code
+  # OPENAI_API_KEY set via: fly secrets set OPENAI_API_KEY=sk-xxx
+  # DATABASE_URL defaults to SQLite in container
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/"
+  timeout = "5s"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "stepwise_data"
+  destination = "/data"
+  initial_size = "1gb"

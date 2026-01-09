@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Hint Flow - User Story 1', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
     await page.goto('/')
   })
 
@@ -102,6 +106,10 @@ test.describe('Hint Flow - User Story 1', () => {
 
 test.describe('Layer Progression - User Story 2', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
     await page.goto('/')
     await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
     await page.getByRole('button', { name: 'Start Solving' }).click()
@@ -159,8 +167,14 @@ test.describe('Layer Progression - User Story 2', () => {
   })
 })
 
-// Dashboard Flow - User Story 4
 test.describe('Dashboard Flow - User Story 4', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
+  })
+
   test('can navigate to dashboard from main page', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'View Learning Stats' }).click()
@@ -222,6 +236,10 @@ test.describe('Dashboard Flow - User Story 4', () => {
 
 test.describe('Reveal Solution Flow - User Story 3', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
     await page.goto('/')
     await page.getByLabel('Enter your math problem').fill('3x + 5 = 14')
     await page.getByRole('button', { name: 'Start Solving' }).click()

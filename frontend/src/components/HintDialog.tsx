@@ -14,6 +14,7 @@ interface HintDialogProps {
   confusionCount?: number
   isDowngrade?: boolean
   canReveal?: boolean
+  defaultEmail?: string
 }
 
 const MIN_RESPONSE_LENGTH = 10
@@ -46,10 +47,11 @@ export function HintDialog({
   confusionCount = 0,
   isDowngrade = false,
   canReveal = false,
+  defaultEmail = '',
 }: HintDialogProps) {
   const { t } = useTranslation()
   const [responseText, setResponseText] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(defaultEmail)
   const [showEmailError, setShowEmailError] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -123,5 +123,36 @@
       "everythingPro": "包含专业版全部功能",
       "fiveProfiles": "最多5个学生账号"
     }
+  },
+  "localeSelector": {
+    "label": "语言"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "欢迎使用 StepWise！",
+      "subtitle": "专为4-9年级设计的苏格拉底式数学教练"
+    },
+    "features": {
+      "hints": "分层引导提示（概念 → 策略 → 步骤）",
+      "reports": "完成后生成PDF学习报告",
+      "digest": "每周学习摘要（可选）"
+    },
+    "preferences": {
+      "title": "您的偏好设置"
+    },
+    "email": {
+      "title": "家长邮箱（可选）",
+      "label": "邮箱地址",
+      "placeholder": "parent@example.com",
+      "sessionReports": "发送学习报告到此邮箱",
+      "weeklyDigest": "发送每周摘要到此邮箱"
+    },
+    "emailInvalid": "请输入有效的邮箱地址",
+    "legal": {
+      "privacy": "隐私政策",
+      "terms": "服务条款"
+    },
+    "continueButton": "开始使用",
+    "settingsButton": "设置"
   }
 }

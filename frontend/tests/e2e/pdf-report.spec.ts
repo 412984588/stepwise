@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('PDF Report Download', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
+  })
+
   test('download report button appears in session history', async ({ page }) => {
     await page.goto('/')
 
@@ -24,6 +31,13 @@ test.describe('PDF Report Download', () => {
 })
 
 test.describe('Event Tracking', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
+  })
+
   test('session start triggers event logging', async ({ page, context }) => {
     let eventLogged = false
 
@@ -43,6 +57,13 @@ test.describe('Event Tracking', () => {
 })
 
 test.describe('Session Learning Summary', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('onboarding_completed', 'true')
+      localStorage.setItem('beta_access_code', 'test-beta-code')
+    })
+  })
+
   test('summary appears on dashboard for recent session', async ({ page }) => {
     await page.goto('/')
 
