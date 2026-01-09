@@ -292,13 +292,22 @@ class EmailService:
             # Compose HTML email body with unsubscribe link
             html_body = self._compose_learning_report_html(summary)
 
-            # Add unsubscribe footer
+            # Add compliance footer with unsubscribe and preferences
+            preferences_url = f"{base_url}/api/v1/email/unsubscribe/{preference.unsubscribe_token}"
             html_body = html_body.replace(
                 "</body>",
                 f"""
     <div style="text-align: center; padding: 16px; margin-top: 24px; border-top: 1px solid #e2e8f0;">
-        <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+        <p style="margin: 0 0 8px 0; font-size: 11px; color: #94a3b8;">
+            <a href="{preferences_url}" style="color: #64748b; text-decoration: underline;">Manage email preferences</a>
+            &nbsp;|&nbsp;
             <a href="{unsubscribe_url}" style="color: #64748b; text-decoration: underline;">Unsubscribe from session reports</a>
+        </p>
+        <p style="margin: 0 0 8px 0; font-size: 10px; color: #cbd5e1;">
+            This only affects session completion emails. You'll still receive weekly digests unless you unsubscribe separately.
+        </p>
+        <p style="margin: 0; font-size: 10px; color: #cbd5e1;">
+            Questions? <a href="mailto:support@stepwise.example.com" style="color: #94a3b8;">Contact us</a>
         </p>
     </div>
 </body>""",
@@ -356,9 +365,30 @@ class EmailService:
             True if sent successfully, False otherwise
         """
         from_email = os.getenv("EMAIL_FROM", "noreply@stepwise.example.com")
+        base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
 
         # Compose HTML email body
         html_body = self._compose_learning_report_html(summary)
+
+        # Add compliance footer (no unsubscribe token available in legacy mode)
+        html_body = html_body.replace(
+            "</body>",
+            f"""
+    <div style="text-align: center; padding: 16px; margin-top: 24px; border-top: 1px solid #e2e8f0;">
+        <p style="margin: 0 0 8px 0; font-size: 11px; color: #94a3b8;">
+            <a href="{base_url}/api/v1/email/unsubscribe/" style="color: #64748b; text-decoration: underline;">Manage email preferences</a>
+            &nbsp;|&nbsp;
+            <a href="{base_url}/api/v1/email/unsubscribe/?type=session_reports" style="color: #64748b; text-decoration: underline;">Unsubscribe from session reports</a>
+        </p>
+        <p style="margin: 0 0 8px 0; font-size: 10px; color: #cbd5e1;">
+            This only affects session completion emails. You'll still receive weekly digests unless you unsubscribe separately.
+        </p>
+        <p style="margin: 0; font-size: 10px; color: #cbd5e1;">
+            Questions? <a href="mailto:support@stepwise.example.com" style="color: #94a3b8;">Contact us</a>
+        </p>
+    </div>
+</body>""",
+        )
 
         # Create message
         message = EmailMessage(
@@ -682,13 +712,24 @@ class EmailService:
             This digest covers learning activity from the past 7 days.
         </p>"""
 
-        # Add unsubscribe link if token is provided
+        # Add compliance footer with unsubscribe and preferences
         if unsubscribe_token:
             base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
-            unsubscribe_url = f"{base_url}/api/v1/email/unsubscribe/{unsubscribe_token}"
+            preferences_url = f"{base_url}/api/v1/email/unsubscribe/{unsubscribe_token}"
+            unsubscribe_url = (
+                f"{base_url}/api/v1/email/unsubscribe/{unsubscribe_token}?type=weekly_digest"
+            )
             html += f"""
-        <p style="margin: 0; font-size: 11px; color: #94a3b8;">
-            <a href="{unsubscribe_url}" style="color: #64748b; text-decoration: underline;">Unsubscribe from weekly reports</a>
+        <p style="margin: 0 0 8px 0; font-size: 11px; color: #94a3b8;">
+            <a href="{preferences_url}" style="color: #64748b; text-decoration: underline;">Manage email preferences</a>
+            &nbsp;|&nbsp;
+            <a href="{unsubscribe_url}" style="color: #64748b; text-decoration: underline;">Unsubscribe from weekly digests</a>
+        </p>
+        <p style="margin: 0 0 8px 0; font-size: 10px; color: #cbd5e1;">
+            This only affects weekly digest emails. You'll still receive session reports unless you unsubscribe separately.
+        </p>
+        <p style="margin: 0; font-size: 10px; color: #cbd5e1;">
+            Questions? <a href="mailto:support@stepwise.example.com" style="color: #94a3b8;">Contact us</a>
         </p>"""
 
         html += """

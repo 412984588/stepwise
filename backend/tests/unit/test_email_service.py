@@ -475,3 +475,312 @@ class TestWeeklyDigestEmail:
 
             assert expected_color in html
             assert performance in html
+
+
+class TestEmailFooterCompliance:
+    """Tests for CAN-SPAM compliant email footers."""
+
+    @pytest.mark.unit
+    def test_session_report_footer_contains_unsubscribe_link(self, monkeypatch) -> None:
+        """Session report emails must contain unsubscribe link."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        summary = {
+            "headline": "Great progress",
+            "performance_level": "Good",
+            "insights": ["Did well"],
+            "recommendation": "Keep going",
+        }
+
+        service.send_learning_report(
+            recipient_email="parent@example.com",
+            session_id="test-123",
+            summary=summary,
+            pdf_content=b"pdf",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must contain unsubscribe link
+        assert "Unsubscribe from session reports" in html
+        assert "/api/v1/email/unsubscribe/" in html
+        assert "?type=session_reports" in html
+
+    @pytest.mark.unit
+    def test_session_report_footer_contains_preferences_link(self, monkeypatch) -> None:
+        """Session report emails must contain manage preferences link."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        summary = {
+            "headline": "Great progress",
+            "performance_level": "Good",
+            "insights": ["Did well"],
+            "recommendation": "Keep going",
+        }
+
+        service.send_learning_report(
+            recipient_email="parent@example.com",
+            session_id="test-123",
+            summary=summary,
+            pdf_content=b"pdf",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must contain preferences link
+        assert "Manage email preferences" in html
+
+    @pytest.mark.unit
+    def test_session_report_footer_clarifies_scope(self, monkeypatch) -> None:
+        """Session report footer must clarify what unsubscribe affects."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        summary = {
+            "headline": "Great progress",
+            "performance_level": "Good",
+            "insights": ["Did well"],
+            "recommendation": "Keep going",
+        }
+
+        service.send_learning_report(
+            recipient_email="parent@example.com",
+            session_id="test-123",
+            summary=summary,
+            pdf_content=b"pdf",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must clarify scope
+        assert "session completion emails" in html or "session reports" in html.lower()
+        assert "weekly" in html.lower()
+
+    @pytest.mark.unit
+    def test_session_report_footer_contains_contact_link(self, monkeypatch) -> None:
+        """Session report emails must contain contact link."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        summary = {
+            "headline": "Great progress",
+            "performance_level": "Good",
+            "insights": ["Did well"],
+            "recommendation": "Keep going",
+        }
+
+        service.send_learning_report(
+            recipient_email="parent@example.com",
+            session_id="test-123",
+            summary=summary,
+            pdf_content=b"pdf",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must contain contact link
+        assert "Contact" in html or "mailto:" in html
+
+    @pytest.mark.unit
+    def test_weekly_digest_footer_contains_unsubscribe_link(self, monkeypatch) -> None:
+        """Weekly digest emails must contain unsubscribe link."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        digest_data = {
+            "total_sessions": 10,
+            "completed_sessions": 8,
+            "highest_layer_reached": "step",
+            "total_time_minutes": 60,
+            "reveal_usage_count": 1,
+            "most_challenging_topic": "Algebra",
+            "performance_level": "Good",
+            "recommendations": ["Keep going"],
+        }
+
+        service.send_weekly_digest(
+            recipient_email="parent@example.com",
+            digest_data=digest_data,
+            week_start_date="2024-01-01",
+            unsubscribe_token="test-token-12345678901234567890",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must contain unsubscribe link
+        assert "Unsubscribe from weekly digests" in html
+        assert "/api/v1/email/unsubscribe/" in html
+        assert "test-token-12345678901234567890" in html
+
+    @pytest.mark.unit
+    def test_weekly_digest_footer_contains_preferences_link(self, monkeypatch) -> None:
+        """Weekly digest emails must contain manage preferences link."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        digest_data = {
+            "total_sessions": 10,
+            "completed_sessions": 8,
+            "highest_layer_reached": "step",
+            "total_time_minutes": 60,
+            "reveal_usage_count": 1,
+            "most_challenging_topic": "Algebra",
+            "performance_level": "Good",
+            "recommendations": ["Keep going"],
+        }
+
+        service.send_weekly_digest(
+            recipient_email="parent@example.com",
+            digest_data=digest_data,
+            week_start_date="2024-01-01",
+            unsubscribe_token="test-token-12345678901234567890",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must contain preferences link
+        assert "Manage email preferences" in html
+
+    @pytest.mark.unit
+    def test_weekly_digest_footer_clarifies_scope(self, monkeypatch) -> None:
+        """Weekly digest footer must clarify what unsubscribe affects."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        digest_data = {
+            "total_sessions": 10,
+            "completed_sessions": 8,
+            "highest_layer_reached": "step",
+            "total_time_minutes": 60,
+            "reveal_usage_count": 1,
+            "most_challenging_topic": "Algebra",
+            "performance_level": "Good",
+            "recommendations": ["Keep going"],
+        }
+
+        service.send_weekly_digest(
+            recipient_email="parent@example.com",
+            digest_data=digest_data,
+            week_start_date="2024-01-01",
+            unsubscribe_token="test-token-12345678901234567890",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must clarify scope
+        assert "weekly digest" in html.lower()
+        assert "session" in html.lower()
+
+    @pytest.mark.unit
+    def test_weekly_digest_footer_contains_contact_link(self, monkeypatch) -> None:
+        """Weekly digest emails must contain contact link."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://app.stepwise.com")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        digest_data = {
+            "total_sessions": 10,
+            "completed_sessions": 8,
+            "highest_layer_reached": "step",
+            "total_time_minutes": 60,
+            "reveal_usage_count": 1,
+            "most_challenging_topic": "Algebra",
+            "performance_level": "Good",
+            "recommendations": ["Keep going"],
+        }
+
+        service.send_weekly_digest(
+            recipient_email="parent@example.com",
+            digest_data=digest_data,
+            week_start_date="2024-01-01",
+            unsubscribe_token="test-token-12345678901234567890",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must contain contact link
+        assert "Contact" in html or "mailto:" in html
+
+    @pytest.mark.unit
+    def test_weekly_digest_uses_api_base_url(self, monkeypatch) -> None:
+        """Weekly digest unsubscribe links must use API_BASE_URL."""
+        monkeypatch.setenv("EMAIL_FROM", "test@stepwise.com")
+        monkeypatch.setenv("API_BASE_URL", "https://custom.stepwise.io")
+
+        mock_provider = Mock(spec=BaseEmailProvider)
+        mock_provider.send_email.return_value = True
+
+        service = EmailService(provider=mock_provider)
+
+        digest_data = {
+            "total_sessions": 5,
+            "completed_sessions": 4,
+            "highest_layer_reached": "concept",
+            "total_time_minutes": 30,
+            "reveal_usage_count": 0,
+            "most_challenging_topic": "N/A",
+            "performance_level": "Good",
+            "recommendations": [],
+        }
+
+        service.send_weekly_digest(
+            recipient_email="parent@example.com",
+            digest_data=digest_data,
+            week_start_date="2024-01-01",
+            unsubscribe_token="abc-token-123456789012345678901",
+        )
+
+        call_args = mock_provider.send_email.call_args[0][0]
+        html = call_args.html_body
+
+        # Must use custom API_BASE_URL
+        assert "https://custom.stepwise.io/api/v1/email/unsubscribe/" in html
