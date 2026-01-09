@@ -25,7 +25,7 @@ from backend.services.event_logger import EventLogger
 from backend.services import entitlements
 from backend.i18n import get_message, Locale
 from backend.utils.validation import generate_session_id, validate_session_id
-from backend.api.dependencies import verify_beta_code
+
 
 MIN_RESPONSE_LENGTH = 10
 
@@ -60,7 +60,6 @@ async def start_session(
     request: StartSessionRequest,
     db: Session = Depends(get_db),
     x_user_id: str | None = Header(None, alias="X-User-ID"),
-    _beta_code: str | None = Depends(verify_beta_code),
 ) -> StartSessionResponse:
     user_id = x_user_id
     if user_id:
@@ -233,7 +232,6 @@ async def respond_to_hint(
     session_id: str,
     request: RespondRequest,
     db: Session = Depends(get_db),
-    _beta_code: str | None = Depends(verify_beta_code),
 ) -> RespondResponse:
     # Validate session_id format
     validate_session_id(session_id)
@@ -392,7 +390,6 @@ async def respond_to_hint(
 async def reveal_solution(
     session_id: str,
     db: Session = Depends(get_db),
-    _beta_code: str | None = Depends(verify_beta_code),
 ) -> dict:
     from backend.schemas.solution import RevealResponse
     from backend.services.solution_generator import SolutionGenerator
@@ -470,7 +467,6 @@ async def complete_session(
     session_id: str,
     request: CompleteRequest | None = Body(default=None),
     db: Session = Depends(get_db),
-    _beta_code: str | None = Depends(verify_beta_code),
 ) -> CompleteResponse:
     from backend.services.email_service import get_email_service
     from backend.services.learning_summary import LearningSummaryGenerator
