@@ -41,3 +41,4 @@ htmlcov/
 # Serena MCP cache
 .serena/
 beta_codes.csv
+.env.dev

@@ -1,0 +1,22 @@
+# Frontend Development Dockerfile for StepWise
+# Optimized for Vite HMR (Hot Module Replacement)
+
+FROM node:18-alpine
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (including dev dependencies)
+RUN npm install
+
+# Expose Vite dev server port
+EXPOSE 3000
+
+# Development mode: source code will be mounted as volume
+# Vite dev server will be started via docker-compose command
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
