@@ -21,6 +21,67 @@ Before using any template, replace these placeholders with your actual values:
 
 ---
 
+## Generating Beta Codes
+
+Use the included script to generate unique beta access codes:
+
+```bash
+# Generate 100 codes (default) to CSV file
+python3 scripts/generate_beta_codes.py
+
+# Generate custom number of codes
+python3 scripts/generate_beta_codes.py -n 50
+
+# Output to specific file
+python3 scripts/generate_beta_codes.py -o my_codes.csv
+
+# Print codes to stdout (for piping)
+python3 scripts/generate_beta_codes.py -n 10 --stdout
+```
+
+### CSV Output Format
+
+The generated CSV includes tracking columns:
+
+| Column          | Description                         |
+| --------------- | ----------------------------------- |
+| `code`          | UUIDv4 beta code                    |
+| `assigned_to`   | Email/name of recipient (fill in)   |
+| `assigned_date` | Date code was distributed (fill in) |
+| `used`          | Whether code was redeemed (fill in) |
+
+### Setting the Backend Environment
+
+After generating codes, set one as the `BETA_ACCESS_CODE` environment variable:
+
+```bash
+# Local development
+export BETA_ACCESS_CODE="your-generated-uuid-here"
+
+# Fly.io staging
+fly secrets set BETA_ACCESS_CODE="your-generated-uuid-here" -a stepwise-backend-staging
+```
+
+### Single vs Multiple Codes
+
+**Option A: Single shared code** (simpler)
+
+- Generate one code, use it in all templates
+- Set as `BETA_ACCESS_CODE` env var
+- Pros: Simple to manage
+- Cons: Can't revoke individual access, no tracking
+
+**Option B: Per-user codes** (more control)
+
+- Generate many codes, assign one per tester
+- Requires backend changes to validate against a list
+- Pros: Can revoke, track usage, limit per code
+- Cons: More complex
+
+For initial beta, **Option A is recommended**. Switch to Option B if you need to revoke access or track individual testers.
+
+---
+
 ## Reddit Templates
 
 ### Version A: Parent-Focused (Recommended for r/Parenting, r/homeschool)
@@ -231,6 +292,7 @@ Parent/Guardian Email (optional)
 
 Before recruiting beta testers, verify:
 
+- [ ] Beta codes generated: `python3 scripts/generate_beta_codes.py`
 - [ ] `<APP_URL>` is live and accessible
 - [ ] `<BETA_CODE>` is set in backend environment (`BETA_ACCESS_CODE`)
 - [ ] `<PRIVACY_URL>` page exists and is accurate
