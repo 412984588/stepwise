@@ -21,7 +21,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'cd ../backend && EMAIL_PROVIDER=console API_ACCESS_KEY=dev-test-key python3 -m uvicorn main:app --host 127.0.0.1 --port 8000',
+        'cd .. && EMAIL_PROVIDER=console API_ACCESS_KEY=dev-test-key python3 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000',
       url: 'http://127.0.0.1:8000/docs',
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
