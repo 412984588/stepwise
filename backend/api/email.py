@@ -134,6 +134,13 @@ def _generate_success_html(email_type: str = "weekly_digest", token: str = "") -
             <p>{main_message}</p>
             <p style="font-size: 0.95rem; color: #6b7280;">This change takes effect immediately.</p>
             {other_options_html}
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; font-size: 0.8rem; color: #9ca3af;">
+                    Questions or concerns? <a href="mailto:support@stepwise.example.com" style="color: #6b7280;">Contact us</a>
+                    &nbsp;|&nbsp;
+                    <a href="mailto:abuse@stepwise.example.com" style="color: #6b7280;">Report abuse</a>
+                </p>
+            </div>
         </div>
     </body>
     </html>
@@ -195,6 +202,13 @@ def _generate_error_html(
             <h1>Invalid or Expired Link</h1>
             <p>{message}</p>
             <p>If you continue to receive unwanted emails, please contact support.</p>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; font-size: 0.8rem; color: #9ca3af;">
+                    <a href="mailto:support@stepwise.example.com" style="color: #6b7280;">Contact support</a>
+                    &nbsp;|&nbsp;
+                    <a href="mailto:abuse@stepwise.example.com" style="color: #6b7280;">Report abuse</a>
+                </p>
+            </div>
         </div>
     </body>
     </html>

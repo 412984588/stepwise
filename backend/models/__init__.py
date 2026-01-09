@@ -20,6 +20,7 @@ from backend.models.event_log import EventLog
 from backend.models.email_preference import EmailPreference
 from backend.models.email_send_log import EmailSendLog, EmailType, EmailSendStatus
 from backend.models.email_throttle import EmailThrottle
+from backend.models.feedback import FeedbackItem
 
 __all__ = [
     "BaseModel",
@@ -45,4 +46,5 @@ __all__ = [
     "EmailType",
     "EmailSendStatus",
     "EmailThrottle",
+    "FeedbackItem",
 ]

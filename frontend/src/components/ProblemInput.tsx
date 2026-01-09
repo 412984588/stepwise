@@ -37,6 +37,7 @@ export function ProblemInput({ onSubmit, isLoading = false, disabled = false }: 
         </label>
         <textarea
           id="problem-input"
+          data-testid="problem-input"
           value={problemText}
           onChange={(e) => setProblemText(e.target.value)}
           placeholder={t('problemInput.placeholder')}
