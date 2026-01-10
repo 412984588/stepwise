@@ -20,6 +20,8 @@ class EmailMessage:
     from_email: Optional[str] = None
     pdf_attachment: Optional[bytes] = None
     pdf_filename: Optional[str] = None
+    list_unsubscribe: Optional[str] = None  # RFC 8058 List-Unsubscribe header
+    list_unsubscribe_post: Optional[str] = None  # RFC 8058 List-Unsubscribe-Post header
 
 
 class BaseEmailProvider(ABC):
@@ -112,6 +114,13 @@ class SendGridEmailProvider(BaseEmailProvider):
                 subject=message.subject,
                 html_content=message.html_body,
             )
+
+            # Add List-Unsubscribe headers (RFC 8058)
+            if message.list_unsubscribe:
+                mail.header = mail.header or {}
+                mail.header["List-Unsubscribe"] = message.list_unsubscribe
+                if message.list_unsubscribe_post:
+                    mail.header["List-Unsubscribe-Post"] = message.list_unsubscribe_post
 
             # Add PDF attachment if provided
             if message.pdf_attachment and message.pdf_filename:
@@ -313,7 +322,7 @@ class EmailService:
 </body>""",
             )
 
-            # Create message
+            # Create message with List-Unsubscribe headers (RFC 8058)
             message = EmailMessage(
                 recipient=recipient_email,
                 subject="Your child's learning report – StepWise",
@@ -321,6 +330,8 @@ class EmailService:
                 from_email=from_email,
                 pdf_attachment=pdf_content,
                 pdf_filename=f"stepwise_report_{session_id}.pdf",
+                list_unsubscribe=f"<{unsubscribe_url}>",
+                list_unsubscribe_post="List-Unsubscribe=One-Click",
             )
 
             # Send via provider
@@ -506,11 +517,19 @@ class EmailService:
 
             html_body = self._compose_weekly_digest_html(digest_data, unsubscribe_token)
 
+            # Build List-Unsubscribe header (RFC 8058)
+            base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+            unsubscribe_url = (
+                f"{base_url}/api/v1/email/unsubscribe/{unsubscribe_token}?type=weekly_digest"
+            )
+
             message = EmailMessage(
                 recipient=recipient_email,
                 subject="Your child's weekly learning summary – StepWise",
                 html_body=html_body,
                 from_email=from_email,
+                list_unsubscribe=f"<{unsubscribe_url}>",
+                list_unsubscribe_post="List-Unsubscribe=One-Click",
             )
 
             # Send via provider
