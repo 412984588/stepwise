@@ -51,7 +51,7 @@ jobs:
         run: pip install -e ".[dev]" psycopg2-binary pytest-xdist
 
       - name: Run tests in parallel
-        run: python -m pytest tests/ -n auto --max-workers 4 -q
+        run: python -m pytest tests/ -n 4 -q
         env:
           DATABASE_URL: postgresql://stepwise:stepwise_test@localhost:5432/stepwise_test
 
