@@ -42,3 +42,4 @@ htmlcov/
 .serena/
 beta_codes.csv
 .env.dev
+beta_codes_*.csv

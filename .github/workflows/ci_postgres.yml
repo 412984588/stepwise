@@ -48,10 +48,10 @@ jobs:
           cache-dependency-path: backend/pyproject.toml
 
       - name: Install dependencies
-        run: pip install -e ".[dev]" psycopg2-binary pytest-xdist
+        run: pip install -e ".[dev]" psycopg2-binary
 
-      - name: Run tests in parallel
-        run: python -m pytest tests/ -n auto --max-workers 4 -q
+      - name: Run tests
+        run: python -m pytest tests/ -q
         env:
           DATABASE_URL: postgresql://stepwise:stepwise_test@localhost:5432/stepwise_test
 
