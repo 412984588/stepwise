@@ -290,6 +290,29 @@ Track each outreach:
 
 ---
 
+## Beta Code Batches
+
+### Code Batch #1 (2026-01-09)
+
+- **Count**: 50 codes
+- **File**: `beta_codes_20260109.csv` (gitignored)
+- **Format**: 8-character alphanumeric (e.g., `A1B2C3D4`)
+- **Status**: Ready for initial distribution
+- **Target**: Reddit r/homeschool, r/Parenting early adopters
+
+### Code Batch #2 (2026-01-09)
+
+- **Count**: 200 codes
+- **File**: `beta_codes_20260109_extra.csv` (gitignored)
+- **Format**: `MATH-XXXX-XXXX` (e.g., `MATH-2DK5-FKEB`)
+- **Status**: Ready for wider distribution
+- **Target**: Discord servers, direct outreach, community referrals
+- **Validity**: 90 days from generation
+
+**Total Available**: 250 beta codes
+
+---
+
 ## Compliance Reminders
 
 - Always include unsubscribe option in emails
