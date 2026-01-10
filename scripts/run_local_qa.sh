@@ -71,9 +71,15 @@ log_error() {
 }
 
 # Check if we're in the project root
-if [ ! -f "docker-compose.yml" ]; then
+if [ ! -f "docker-compose.dev.yml" ] && [ ! -f "docker-compose.yml" ]; then
     log_error "Must run from project root directory"
     exit 1
+fi
+
+# Determine which docker-compose file to use
+COMPOSE_FILE="docker-compose.yml"
+if [ -f "docker-compose.dev.yml" ]; then
+    COMPOSE_FILE="docker-compose.dev.yml"
 fi
 
 # Step 1: Start PostgreSQL (unless skipped or UI-only)
@@ -81,17 +87,17 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_DOCKER" = false ]; then
     log_info "Starting PostgreSQL via docker-compose..."
     
     # Check if PostgreSQL is already running
-    if docker-compose ps postgres | grep -q "Up"; then
+    if docker-compose -f "$COMPOSE_FILE" ps postgres | grep -q "Up"; then
         log_warning "PostgreSQL is already running"
     else
-        docker-compose --profile postgres up -d
+        docker-compose -f "$COMPOSE_FILE" --profile postgres up -d
         
         # Wait for PostgreSQL to be ready
         log_info "Waiting for PostgreSQL to be ready..."
         sleep 5
         
         # Health check
-        until docker-compose exec -T postgres pg_isready -U stepwise_user -d stepwise_db > /dev/null 2>&1; do
+        until docker-compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U stepwise_user -d stepwise_db > /dev/null 2>&1; do
             echo -n "."
             sleep 1
         done
