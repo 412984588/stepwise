@@ -1,0 +1,85 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_backend:
+        description: "Deploy backend"
+        type: boolean
+        default: true
+      deploy_frontend:
+        description: "Deploy frontend"
+        type: boolean
+        default: true
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || inputs.deploy_backend
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy Backend to Fly.io
+        run: flyctl deploy --remote-only --app stepwise-backend-staging
+
+      - name: Verify Backend Deployment
+        run: |
+          sleep 10
+          curl -f https://stepwise-backend-staging.fly.dev/ || exit 1
+
+  frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: backend
+    if: always() && (github.event_name == 'push' || inputs.deploy_frontend) && (needs.backend.result == 'success' || needs.backend.result == 'skipped')
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy Frontend to Fly.io
+        run: flyctl deploy --remote-only --app stepwise-frontend-staging
+
+      - name: Verify Frontend Deployment
+        run: |
+          sleep 10
+          curl -f https://stepwise-frontend-staging.fly.dev/health || exit 1
+
+  notify:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: always()
+
+    steps:
+      - name: Deployment Status
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend: https://stepwise-backend-staging.fly.dev" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: https://stepwise-frontend-staging.fly.dev" >> $GITHUB_STEP_SUMMARY
+          echo "- API Docs: https://stepwise-backend-staging.fly.dev/docs" >> $GITHUB_STEP_SUMMARY

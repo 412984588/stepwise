@@ -1,5 +1,26 @@
 services:
-  # Backend service - FastAPI with hot reload
+  postgres:
+    image: postgres:16-alpine
+    container_name: stepwise-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stepwise
+      POSTGRES_PASSWORD: stepwise_dev
+      POSTGRES_DB: stepwise
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stepwise -d stepwise"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stepwise-dev
+    profiles:
+      - postgres
+
   backend:
     build:
       context: .
@@ -13,19 +34,21 @@ services:
       # Persist SQLite database
       - stepwise-dev-data:/data
     environment:
-      # Development environment variables
-      - DATABASE_URL=sqlite:////data/stepwise_dev.db
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/stepwise_dev.db}
       - EMAIL_PROVIDER=console
       - API_ACCESS_KEY=dev-test-key
-      - BETA_ACCESS_CODE=MATH2024
+      - BETA_ACCESS_CODE=${BETA_ACCESS_CODE:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=development
       - PYTHONUNBUFFERED=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
     command: >
       sh -c "cd /app &&
-             python -m uvicorn backend.main:app
-             --host 0.0.0.0
-             --port 8000
-             --reload
-             --reload-dir /app/backend"
+             python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/backend"
     healthcheck:
       test:
         [
@@ -55,8 +78,9 @@ services:
       # Exclude node_modules from mount (use container's version)
       - /app/node_modules
     environment:
-      # Point to backend service
       - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+      - VITE_SENTRY_ENVIRONMENT=development
       - NODE_ENV=development
     command: npm run dev -- --host 0.0.0.0 --port 3000
     depends_on:
@@ -80,6 +104,8 @@ services:
 
 volumes:
   stepwise-dev-data:
+    driver: local
+  postgres-dev-data:
     driver: local
 
 networks:

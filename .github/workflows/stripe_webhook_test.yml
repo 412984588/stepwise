@@ -1,0 +1,87 @@
+name: Stripe Webhook Tests
+
+on:
+  pull_request:
+    paths:
+      - "backend/api/billing.py"
+      - "backend/services/stripe_service.py"
+      - "backend/tests/**/test_*stripe*.py"
+      - "backend/tests/**/test_*billing*.py"
+  workflow_dispatch: {}
+
+env:
+  STRIPE_API_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+
+jobs:
+  webhook-tests:
+    name: Test Stripe Webhooks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: stepwise
+          POSTGRES_PASSWORD: stepwise_test
+          POSTGRES_DB: stepwise_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stepwise -d stepwise_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]" psycopg2-binary
+
+      - name: Setup Stripe CLI
+        uses: stripe/stripe-cli-action@v1
+        with:
+          version: latest
+
+      - name: Start backend server
+        run: |
+          uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+        env:
+          DATABASE_URL: postgresql://stepwise:stepwise_test@localhost:5432/stepwise_test
+          API_ACCESS_KEY: dev-test-key
+          EMAIL_PROVIDER: console
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_TEST_WEBHOOK_SECRET }}
+
+      - name: Listen for webhooks and trigger test events
+        run: |
+          stripe listen --forward-to localhost:8000/api/v1/billing/webhook &
+          LISTEN_PID=$!
+          sleep 3
+
+          stripe trigger payment_intent.succeeded
+          stripe trigger checkout.session.completed
+          stripe trigger customer.subscription.created
+          stripe trigger customer.subscription.updated
+          stripe trigger customer.subscription.deleted
+
+          sleep 5
+          kill $LISTEN_PID || true
+
+      - name: Run webhook signature tests
+        run: python -m pytest tests/ -k "webhook or billing" -v
+        env:
+          DATABASE_URL: postgresql://stepwise:stepwise_test@localhost:5432/stepwise_test
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_TEST_WEBHOOK_SECRET }}
