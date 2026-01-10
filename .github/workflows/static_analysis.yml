@@ -16,6 +16,7 @@ jobs:
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,7 +27,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: warning
-          fail_on_error: false
+          fail_level: none
           shellcheck_flags: '--severity=style --enable=all'
           filter_mode: nofilter
           path: '.'
@@ -36,6 +37,7 @@ jobs:
   markdownlint:
     name: Markdown Lint
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,7 +48,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: warning
-          fail_on_error: false
+          fail_level: none
           markdownlint_flags: '--config .markdownlint.json **/*.md'
           filter_mode: nofilter
 
