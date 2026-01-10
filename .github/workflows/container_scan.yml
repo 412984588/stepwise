@@ -1,0 +1,141 @@
+name: Container Security Scan
+
+on:
+  pull_request:
+    paths:
+      - "backend/Dockerfile*"
+      - "frontend/Dockerfile*"
+      - "backend/**/*.py"
+      - "frontend/**/*.{ts,tsx,js,jsx}"
+      - ".github/workflows/container_scan.yml"
+  push:
+    branches:
+      - master
+      - main
+  schedule:
+    # Run weekly on Monday at 02:00 UTC
+    - cron: "0 2 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  trivy-backend:
+    name: Trivy Scan - Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build backend Docker image
+        run: |
+          docker build -t stepwise-backend:${{ github.sha }} -f backend/Dockerfile backend/
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "stepwise-backend:${{ github.sha }}"
+          format: "sarif"
+          output: "trivy-backend-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0"
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-backend-results.sarif"
+          category: "trivy-backend"
+
+      - name: Run Trivy scan for PR comments
+        uses: aquasecurity/trivy-action@master
+        if: github.event_name == 'pull_request'
+        with:
+          image-ref: "stepwise-backend:${{ github.sha }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+  trivy-frontend:
+    name: Trivy Scan - Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build frontend Docker image
+        run: |
+          docker build -t stepwise-frontend:${{ github.sha }} -f frontend/Dockerfile frontend/
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "stepwise-frontend:${{ github.sha }}"
+          format: "sarif"
+          output: "trivy-frontend-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0"
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-frontend-results.sarif"
+          category: "trivy-frontend"
+
+      - name: Run Trivy scan for PR comments
+        uses: aquasecurity/trivy-action@master
+        if: github.event_name == 'pull_request'
+        with:
+          image-ref: "stepwise-frontend:${{ github.sha }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+  trivy-filesystem:
+    name: Trivy Scan - Filesystem
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0"
+
+      - name: Upload Trivy filesystem results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-fs-results.sarif"
+          category: "trivy-filesystem"
+
+  container-scan-summary:
+    name: Container Scan Summary
+    runs-on: ubuntu-latest
+    needs: [trivy-backend, trivy-frontend, trivy-filesystem]
+    if: always()
+    steps:
+      - name: Check scan statuses
+        run: |
+          echo "Backend Scan: ${{ needs.trivy-backend.result }}"
+          echo "Frontend Scan: ${{ needs.trivy-frontend.result }}"
+          echo "Filesystem Scan: ${{ needs.trivy-filesystem.result }}"
+
+          if [ "${{ needs.trivy-backend.result }}" == "failure" ] || \
+             [ "${{ needs.trivy-frontend.result }}" == "failure" ] || \
+             [ "${{ needs.trivy-filesystem.result }}" == "failure" ]; then
+            echo "🚨 Container security vulnerabilities detected!"
+            echo "Please review the Trivy findings in the Security tab."
+            exit 1
+          else
+            echo "✅ No critical container vulnerabilities detected!"
+          fi

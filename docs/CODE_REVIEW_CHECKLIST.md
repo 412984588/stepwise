@@ -30,6 +30,7 @@
 ## 1. Logic & Correctness
 
 ### Core Functionality
+
 - [ ] **Does the code do what it's supposed to do?**
   - Verify against requirements/user story
   - Check edge cases and boundary conditions
@@ -47,6 +48,7 @@
   - Edge cases
 
 ### Business Logic
+
 - [ ] **Does the implementation match business requirements?**
 - [ ] **Are calculations and algorithms correct?**
 - [ ] **Are there any hardcoded values that should be configurable?**
@@ -58,6 +60,7 @@
 ## 2. Design & Architecture
 
 ### Code Organization
+
 - [ ] **Is the code in the right place?**
   - Correct module/package
   - Appropriate layer (API, service, model)
@@ -74,11 +77,13 @@
   - Clear interfaces
 
 ### Design Patterns
+
 - [ ] **Are design patterns used appropriately?**
 - [ ] **Is dependency injection used where appropriate?**
 - [ ] **Are there circular dependencies?** (should be avoided)
 
 ### Scalability
+
 - [ ] **Will this code scale?**
   - Database query efficiency
   - Memory usage
@@ -91,6 +96,7 @@
 ## 3. Security
 
 ### Input Validation
+
 - [ ] **Is all user input validated?**
   - Type checking
   - Range checking
@@ -111,6 +117,7 @@
   - SameSite cookies
 
 ### Authentication & Authorization
+
 - [ ] **Is authentication required where needed?**
 - [ ] **Is authorization checked properly?**
   - Role-based access control
@@ -122,6 +129,7 @@
   - Salted
 
 ### Data Protection
+
 - [ ] **Is sensitive data encrypted?**
   - At rest
   - In transit (HTTPS)
@@ -131,6 +139,7 @@
   - Stack traces not exposed in production
 
 ### OWASP Top 10
+
 - [ ] **Check against OWASP Top 10 vulnerabilities**
   - Injection
   - Broken Authentication
@@ -150,6 +159,7 @@
 ## 4. Dependencies & External Libraries
 
 ### Dependency Management
+
 - [ ] **Are new dependencies necessary?**
   - Can existing dependencies be used?
   - Is the functionality simple enough to implement ourselves?
@@ -164,6 +174,7 @@
   - Active maintenance
 
 ### License Compliance
+
 - [ ] **Are dependency licenses compatible with our project?**
   - MIT, Apache 2.0, BSD (usually OK)
   - GPL, AGPL (may have restrictions)
@@ -171,6 +182,7 @@
 - [ ] **Are license files included?**
 
 ### Dependency Size
+
 - [ ] **Is the dependency size reasonable?**
   - Bundle size impact (frontend)
   - Installation time (backend)
@@ -182,6 +194,7 @@
 ## 5. Secrets & Credentials
 
 ### Secret Detection
+
 - [ ] **Are there any hardcoded secrets?**
   - API keys
   - Passwords
@@ -195,11 +208,13 @@
   - Not in version control
 
 ### Configuration
+
 - [ ] **Are sensitive configs in `.env` files?**
 - [ ] **Is `.env` in `.gitignore`?**
 - [ ] **Is there a `.env.example` file?**
 
 ### Logging
+
 - [ ] **Are secrets logged?** (should NOT be)
   - Check log statements
   - Check error messages
@@ -212,6 +227,7 @@
 ## 6. Testing
 
 ### Test Coverage
+
 - [ ] **Are there tests for new code?**
   - Unit tests
   - Integration tests
@@ -229,6 +245,7 @@
   - Clear test names
 
 ### Test Quality
+
 - [ ] **Are tests independent?**
   - No shared state
   - Can run in any order
@@ -242,6 +259,7 @@
   - Database mocked (for unit tests)
 
 ### Test-Driven Development
+
 - [ ] **Were tests written first?** (TDD)
 - [ ] **Do tests fail before implementation?**
 - [ ] **Do tests pass after implementation?**
@@ -253,6 +271,7 @@
 ## 7. Performance
 
 ### Efficiency
+
 - [ ] **Are there performance bottlenecks?**
   - N+1 queries
   - Unnecessary loops
@@ -260,7 +279,7 @@
 
 - [ ] **Are database queries optimized?**
   - Proper indexes
-  - Avoid SELECT *
+  - Avoid SELECT \*
   - Pagination for large datasets
 
 - [ ] **Is caching used appropriately?**
@@ -269,6 +288,7 @@
   - Memoization
 
 ### Resource Usage
+
 - [ ] **Is memory usage reasonable?**
   - No memory leaks
   - Large objects cleaned up
@@ -284,6 +304,7 @@
 ## 8. Code Style & Readability
 
 ### Naming
+
 - [ ] **Are names descriptive and meaningful?**
   - Variables: `userEmail` not `ue`
   - Functions: `calculateTotalPrice()` not `calc()`
@@ -295,6 +316,7 @@
   - UPPER_CASE for constants
 
 ### Code Clarity
+
 - [ ] **Is the code easy to understand?**
   - Clear logic flow
   - Not overly clever
@@ -309,18 +331,20 @@
   - Early returns to reduce nesting
 
 ### Comments
+
 - [ ] **Are comments helpful?**
   - Explain "why", not "what"
   - No commented-out code
   - No TODO comments (use issue tracker)
 
-**🤖 Automation**: ESLint, Ruff, Black, Prettier, markdownlint
+**🤖 Automation**: ESLint, **Ruff** (Python fast linter), Black, Prettier, markdownlint
 
 ---
 
 ## 9. Documentation
 
 ### Code Documentation
+
 - [ ] **Are complex functions documented?**
   - Docstrings (Python)
   - JSDoc (JavaScript/TypeScript)
@@ -332,6 +356,7 @@
   - Error codes
 
 ### User Documentation
+
 - [ ] **Is README.md updated?**
   - New features documented
   - Setup instructions current
@@ -341,6 +366,7 @@
   - Migration guide
 
 ### Inline Documentation
+
 - [ ] **Are magic numbers explained?**
 - [ ] **Are complex algorithms explained?**
 - [ ] **Are assumptions documented?**
@@ -352,6 +378,7 @@
 ## 10. Error Handling
 
 ### Error Handling Strategy
+
 - [ ] **Are errors handled appropriately?**
   - Try/catch blocks
   - Error boundaries (React)
@@ -368,6 +395,7 @@
   - Structured logging
 
 ### Error Recovery
+
 - [ ] **Can the system recover from errors?**
   - Retry logic
   - Fallback mechanisms
@@ -384,6 +412,7 @@
 ## 11. Database & Data
 
 ### Data Integrity
+
 - [ ] **Are database constraints used?**
   - NOT NULL
   - UNIQUE
@@ -399,6 +428,7 @@
   - Business rules
 
 ### Migrations
+
 - [ ] **Are database migrations reversible?**
   - Down migrations
   - Safe to rollback
@@ -408,6 +438,7 @@
   - With production-like data
 
 ### Data Privacy
+
 - [ ] **Is PII (Personally Identifiable Information) handled correctly?**
   - GDPR compliance
   - COPPA compliance (for children's data)
@@ -420,6 +451,7 @@
 ## 12. API Design
 
 ### RESTful Principles
+
 - [ ] **Are REST conventions followed?**
   - GET for retrieval
   - POST for creation
@@ -436,11 +468,13 @@
   - 500 Internal Server Error
 
 ### API Versioning
+
 - [ ] **Is API versioning used?**
   - `/api/v1/...`
   - Backward compatibility
 
 ### Request/Response
+
 - [ ] **Are request/response formats consistent?**
   - JSON structure
   - Error format
@@ -458,6 +492,7 @@
 ## 13. Frontend Specific
 
 ### React/TypeScript
+
 - [ ] **Are hooks used correctly?**
   - useEffect dependencies
   - useMemo/useCallback for performance
@@ -473,6 +508,7 @@
   - Screen reader support
 
 ### Performance
+
 - [ ] **Is code splitting used?**
   - Lazy loading
   - Dynamic imports
@@ -483,6 +519,7 @@
   - Responsive images
 
 ### User Experience
+
 - [ ] **Is loading state handled?**
   - Spinners/skeletons
   - Optimistic updates
@@ -498,6 +535,7 @@
 ## 14. Backend Specific
 
 ### Python/FastAPI
+
 - [ ] **Are type hints used?**
   - Function parameters
   - Return types
@@ -509,11 +547,13 @@
   - No blocking operations in async functions
 
 ### API Endpoints
+
 - [ ] **Is rate limiting implemented?**
 - [ ] **Is CORS configured correctly?**
 - [ ] **Are API keys protected?**
 
 ### Background Jobs
+
 - [ ] **Are long-running tasks async?**
   - Celery/RQ
   - Background workers
@@ -528,15 +568,17 @@
 ## Automation Recommendations
 
 ### Static Analysis
+
 - **ShellCheck**: Shell script linting
 - **markdownlint**: Markdown linting
 - **ESLint**: JavaScript/TypeScript linting
-- **Ruff**: Python linting (fast)
+- **Ruff**: Python fast linter (replaces flake8, isort, pyupgrade, etc.)
 - **Black**: Python code formatting
 - **Prettier**: JavaScript/TypeScript/CSS formatting
 - **mypy**: Python type checking
 
 ### Security
+
 - **Snyk**: Dependency vulnerability scanning
 - **git-secrets**: Prevent committing secrets
 - **trufflehog**: Find secrets in git history
@@ -545,6 +587,7 @@
 - **npm audit**: JavaScript dependency audit
 
 ### Testing
+
 - **pytest**: Python testing framework
 - **Jest**: JavaScript testing framework
 - **Playwright**: E2E testing
@@ -552,12 +595,14 @@
 - **Istanbul**: JavaScript coverage
 
 ### Code Review
+
 - **reviewdog**: Automated code review comments
 - **CodeClimate**: Code quality analysis
 - **SonarQube**: Code quality and security
 - **Codecov**: Coverage tracking
 
 ### CI/CD Integration
+
 - **GitHub Actions**: Workflow automation
 - **pre-commit**: Git hooks for local checks
 - **Husky**: Git hooks for JavaScript projects
@@ -567,6 +612,7 @@
 ## Review Process
 
 ### Before Requesting Review
+
 1. **Self-review your code**
    - Read through all changes
    - Check against this checklist
@@ -585,12 +631,14 @@
    - Coverage maintained
 
 ### During Review
+
 1. **Respond to comments promptly**
 2. **Ask questions if unclear**
 3. **Don't take feedback personally**
 4. **Explain your reasoning**
 
 ### After Review
+
 1. **Address all comments**
 2. **Re-request review if needed**
 3. **Squash commits if requested**
@@ -630,5 +678,5 @@ Use this quick checklist for every PR:
 
 ---
 
-*Last Updated: 2026-01-10*  
-*Version: 1.0*
+_Last Updated: 2026-01-10_
+_Version: 1.0_
