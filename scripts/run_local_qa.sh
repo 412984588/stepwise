@@ -85,17 +85,17 @@ fi
 # Step 1: Start PostgreSQL (unless skipped or UI-only)
 if [ "$UI_ONLY" = false ] && [ "$SKIP_DOCKER" = false ]; then
     log_info "Starting PostgreSQL via docker-compose..."
-    
+
     # Check if PostgreSQL is already running
     if docker-compose -f "$COMPOSE_FILE" ps postgres | grep -q "Up"; then
         log_warning "PostgreSQL is already running"
     else
         docker-compose -f "$COMPOSE_FILE" --profile postgres up -d
-        
+
         # Wait for PostgreSQL to be ready
         log_info "Waiting for PostgreSQL to be ready..."
         sleep 5
-        
+
         # Health check
         until docker-compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U stepwise_user -d stepwise_db > /dev/null 2>&1; do
             echo -n "."
@@ -109,9 +109,9 @@ fi
 # Step 2: Run backend tests (unless skipped or UI-only)
 if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
     log_info "Running backend tests (pytest)..."
-    
+
     cd backend
-    
+
     # Check if virtual environment exists
     if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
         log_warning "No virtual environment found. Creating one..."
@@ -126,39 +126,39 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
             source .venv/bin/activate
         fi
     fi
-    
+
     # Run pytest with coverage
     log_info "Running pytest with coverage..."
-    pytest tests/ -v --cov=. --cov-report=term-missing
-    
+    PYTHONPATH=$(pwd) pytest tests/ -v --cov=. --cov-report=term-missing
+
     if [ $? -eq 0 ]; then
         log_success "Backend tests passed"
     else
         log_error "Backend tests failed"
         exit 1
     fi
-    
+
     cd ..
 fi
 
 # Step 3: Run frontend E2E tests (unless skipped or UI-only)
 if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
     log_info "Running frontend E2E tests (Playwright)..."
-    
+
     cd frontend
-    
+
     # Check if node_modules exists
     if [ ! -d "node_modules" ]; then
         log_warning "node_modules not found. Running npm install..."
         npm install
     fi
-    
+
     # Install Playwright browsers if needed
     if [ ! -d "$HOME/.cache/ms-playwright" ]; then
         log_info "Installing Playwright browsers..."
         npx playwright install --with-deps
     fi
-    
+
     # Start backend server in background
     log_info "Starting backend server..."
     cd ../backend
@@ -167,13 +167,13 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
     else
         source .venv/bin/activate
     fi
-    
+
     # Kill any existing backend server on port 8000
     lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-    
+
     uvicorn backend.main:app --host 0.0.0.0 --port 8000 > /tmp/stepwise_backend.log 2>&1 &
     BACKEND_PID=$!
-    
+
     # Wait for backend to be ready
     log_info "Waiting for backend to be ready..."
     sleep 3
@@ -183,17 +183,17 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
     done
     echo ""
     log_success "Backend is ready (PID: $BACKEND_PID)"
-    
+
     # Start frontend dev server in background
     log_info "Starting frontend dev server..."
     cd ../frontend
-    
+
     # Kill any existing frontend server on port 3000
     lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-    
+
     npm run dev > /tmp/stepwise_frontend.log 2>&1 &
     FRONTEND_PID=$!
-    
+
     # Wait for frontend to be ready
     log_info "Waiting for frontend to be ready..."
     sleep 5
@@ -203,10 +203,10 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
     done
     echo ""
     log_success "Frontend is ready (PID: $FRONTEND_PID)"
-    
+
     # Run Playwright tests with xvfb (headless)
     log_info "Running Playwright E2E tests..."
-    
+
     # Check if running on Linux (need xvfb)
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Install xvfb if not present
@@ -218,13 +218,13 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
         # macOS/Windows - run without xvfb
         npx playwright test
     fi
-    
+
     PLAYWRIGHT_EXIT_CODE=$?
-    
+
     # Kill background servers
     kill $BACKEND_PID 2>/dev/null || true
     kill $FRONTEND_PID 2>/dev/null || true
-    
+
     if [ $PLAYWRIGHT_EXIT_CODE -eq 0 ]; then
         log_success "Playwright E2E tests passed"
     else
@@ -234,7 +234,7 @@ if [ "$UI_ONLY" = false ] && [ "$SKIP_TESTS" = false ]; then
         log_info "  Frontend: /tmp/stepwise_frontend.log"
         exit 1
     fi
-    
+
     cd ..
 fi
 
@@ -252,13 +252,13 @@ if ! curl -s http://localhost:8000/health > /dev/null 2>&1; then
     else
         source .venv/bin/activate
     fi
-    
+
     # Kill any existing backend server
     lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-    
+
     uvicorn backend.main:app --host 0.0.0.0 --port 8000 > /tmp/stepwise_backend.log 2>&1 &
     BACKEND_PID=$!
-    
+
     sleep 3
     log_success "Backend is ready (PID: $BACKEND_PID)"
     cd ../frontend
@@ -267,13 +267,13 @@ fi
 # Start frontend dev server if not already running
 if ! curl -s http://localhost:3000 > /dev/null 2>&1; then
     log_info "Starting frontend dev server..."
-    
+
     # Kill any existing frontend server
     lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-    
+
     npm run dev > /tmp/stepwise_frontend.log 2>&1 &
     FRONTEND_PID=$!
-    
+
     sleep 5
     log_success "Frontend is ready (PID: $FRONTEND_PID)"
 fi
